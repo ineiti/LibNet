@@ -1,0 +1,181 @@
+#!/bin/sh
+
+if [ "$LIB_TIGO" = "loaded" ]; then
+#  return
+echo
+fi
+LIB_TIGO=loaded
+. $PWD/lib_usb
+
+TIGO=$PWD
+CLEFT=$LOGDIR/tigo_credit
+PLEFT=$LOGDIR/tigo_promotion
+DEV=/dev/ttyUSB2
+
+#
+# Promotion-add, get, update
+#
+
+isp_tigo_promotion_add(){
+  if [ "$1" ]; then
+    case "$1" in
+      hour|30MB)
+        PROMOTION=1111
+        ;;
+      day|100MB)
+        PROMOTION=2424
+        ;;
+      week|1GB)
+        PROMOTION=7777
+        ;;
+      month|5GB)
+        PROMOTION=3030
+        ;;
+    esac
+    if [ "$PROMOTION" ]; then
+      # Testing for new version which has a global config-file
+      if [ -f /etc/gammu.conf ]; then
+        gammu sendsms TEXT $PROMOTION -text "kattir" 2>/dev/null
+      else
+        echo kattir | gammu sendsms TEXT $PROMOTION 2>/dev/null
+      fi
+    fi
+  fi
+  isp_tigo_promotion_update
+}
+
+isp_tigo_promotion_get(){
+  # This should also work.. - simple test-cases
+  #STR="30.000 MB INTERNET valide avant 04/10/2012."
+  #STR=" 30.000 MB INTERNET valide avant 04/10/2012."
+  #STR="250.00 CFA recharge bonus, 30.000 MB INTERNET valide avant 04/10/2012."
+  #STR="250.00 CFA recharge bonus."
+  STR=$( ussd_decode $( gcom_call get_promotion ) )
+  log "Got string $STR"
+  if rs "$STR" Octet; then
+    log Found octets
+    echo $STR | sed -e "s/.*MMS, \(.*\) Octet.*/\1/"
+  elif rs "$STR" "INTERNET"; then
+    log Found INTERNET
+    STR=$( echo $STR | sed -e "s/.*recharge bonus, //" )
+    BYTES=$( echo $STR | sed -e "s/[^0-9]*\([0-9]*\.[0-9]* ..\) INTERNET.*/\1/" )
+    logger $BYTES left on internet
+    echo $BYTES
+  elif rs "$STR" "a marche"; then
+    log Waiting for SMS
+    if [ -e $DEV ]; then
+      for w in $( seq 10 ); do
+        log Waiting till $(( w * 5 )) seconds
+        BYTES=$( gnokii --getsms SM 0 29 -d 2>&1 | grep octet | tail -n 1 )
+        if [ "$BYTES" ]; then
+          break;
+        fi
+        sleep 5
+      done
+    fi
+    sms_delete
+    echo $BYTES | sed -e "s/.*MMS, \(.*\) octet.*/\1/"
+  elif rs "$STR" "Vous n'avez pas"; then
+    log "No promotion"
+    echo 0
+  elif rs "$STR" "recharge bonus"; then
+    log "No promotion"
+    echo 0
+  elif rs "$STR" "KATTIR"; then
+    log "Lonely kattir-message"
+    echo 0
+  fi
+}
+
+isp_tigo_promotion_update(){
+  if [ ! "$LOGDIR" ]; then
+    return
+  fi
+  log Getting promotion
+  P=$( isp_tigo_promotion_get ) 
+  if [ "$P" ]; then
+    echo $P > $PLEFT
+  fi
+  isp_update_vars
+}
+
+#
+# Credit-add, send, get, update
+#
+
+isp_tigo_credit_add(){
+  STR=$( get_ussd "123*$1" )
+  log "Added credit $STR"
+  ips_tigo_credit_update
+  echo $STR
+}
+
+isp_tigo_credit_send(){
+  STR=$( get_ussd "190*1234*235$2*$1" )
+  log "Sent credit $2 to $1 -> $STR"
+  ips_tigo_credit_update
+  echo $STR
+}
+
+isp_tigo_credit_get(){
+  STR=$( ussd_decode $( gcom_call get_credit ) )
+  log "Got credit $STR"
+  if rs "$STR" solde; then
+    echo $STR | sed -e "s/.*est de \([0-9]*\)\..*/\1/"
+  fi
+}
+
+isp_tigo_credit_update(){
+  if [ ! "$LOGDIR" ]; then
+    return
+  fi
+  log Getting credit
+  C=$( isp_tigo_credit_get )
+  if [ "$C" ]; then
+    echo $C | sed -e "s/\..*//" > $CLEFT
+  fi
+  isp_update_vars
+}
+
+#
+# Connection-start, status, stop
+#
+
+isp_connection_start(){
+  pon tigo
+  echo $( date +%s ) > $CONNSTAT-start
+}
+
+isp_connection_status(){
+  if grep_pppd | grep -q failed; then
+    echo -1
+    return
+  fi
+  PPP=$( ip link | grep " ppp" | sed -e "s/.*\(ppp.\).*/\1/" )
+  PAP=$( grep_pppd | grep PAP )
+  PPP_IP=$( grep_pppd grep -A 3 PAP | grep local | sed -e "s/.* //" )
+  TUN=$( ip link | grep " tun" | sed -e "s/.*\(tun.\).*/\1/" )
+  ret=0
+  for a in "$PPP" "$PAP" "$PPP_IP" "$TUN" ""; do
+    if [ "$a" ]; then
+      ret=$(( ret + 1 ))
+    else
+      echo $ret
+      return
+    fi
+  done
+}
+
+isp_connection_stop(){
+  while poff -a; do sleep 1; done
+}
+
+isp_update_vars(){
+  if [ ! "$LOGDIR" ]; then
+    return
+  fi
+  CREDIT_LEFT=$( cat $CLEFT )
+  PROMOTION_LEFT=$( cat $PLEFT )
+}
+
+isp_update_vars

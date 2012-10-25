@@ -1,0 +1,13 @@
+#!/bin/bash
+
+isp_connection_start(){
+  ifup wan
+}
+
+isp_connection_status(){
+  echo "0: unknown"
+}
+
+isp_connection_stop(){
+  ifdown wan
+}
