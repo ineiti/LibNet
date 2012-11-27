@@ -8,3 +8,38 @@
 mail_get_queue(){
   postqueue -p | grep -v "Connection refused" -
 }
+
+mail_start_copy(){
+  $PWD/start_copy_emails
+  rm /var/spool/postfix/hold/*
+}
+
+get_line_field(){
+  grep $2 $1 | sed -e "s/ \+/ /g" | cut -d " " -f $3
+}
+
+ppp_rx(){
+  BYTES=$( get_line_field /proc/net/dev ppp0 3 )
+  echo ${BYTES:-0}
+}
+
+ppp_tx(){
+  BYTES=$( get_line_field /proc/net/dev ppp0 11 )
+  echo ${BYTES:-0}
+}
+
+remove_line(){
+  SEARCH=$1
+  FILE=$2
+
+  egrep -v "$SEARCH" "$FILE" > "$FILE.tmp"
+  mv "$FILE.tmp" "$FILE"
+}
+
+email_backup(){
+  EMAIL=${1:-info@profeda.org}
+  BACKUP="/tmp/backup-$DATE.tgz"
+  tar czf $BACKUP /var/www/Gestion/data
+  echo "Backup of Gestion from Bitkine" | 
+    mail -a $BACKUP -s "Backup from Bitkine at $DATE" $EMAIL
+}

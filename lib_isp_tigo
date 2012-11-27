@@ -8,15 +8,18 @@ LIB_TIGO=loaded
 . $PWD/lib_usb
 
 TIGO=$PWD
-CLEFT=$LOGDIR/tigo_credit
-PLEFT=$LOGDIR/tigo_promotion
+CLEFT=$RUN/tigo_credit
+PLEFT=$RUN/tigo_promotion
 DEV=/dev/ttyUSB2
+TIGO_STATUS=$RUN/tigo_status
+touch $TIGO_STATUS $CLEFT $PLEFT
 
 #
 # Promotion-add, get, update
 #
 
 isp_tigo_promotion_add(){
+  log Promotion add $1
   if [ "$1" ]; then
     case "$1" in
       hour|30MB)
@@ -42,9 +45,10 @@ isp_tigo_promotion_add(){
     fi
   fi
   isp_tigo_promotion_update
+  isp_tigo_credit_update
 }
 
-isp_tigo_promotion_get(){
+isp_tigo_promotion_get_raw(){
   # This should also work.. - simple test-cases
   #STR="30.000 MB INTERNET valide avant 04/10/2012."
   #STR=" 30.000 MB INTERNET valide avant 04/10/2012."
@@ -73,7 +77,7 @@ isp_tigo_promotion_get(){
         sleep 5
       done
     fi
-    sms_delete
+    #sms_delete
     echo $BYTES | sed -e "s/.*MMS, \(.*\) octet.*/\1/"
   elif rs "$STR" "Vous n'avez pas"; then
     log "No promotion"
@@ -87,12 +91,20 @@ isp_tigo_promotion_get(){
   fi
 }
 
-isp_tigo_promotion_update(){
-  if [ ! "$LOGDIR" ]; then
-    return
+isp_tigo_promotion_get(){
+  STR=$( isp_tigo_promotion_get_raw )
+  if rs "$STR" MB; then
+    echo "scale=0; ${STR/ MB/} * 1000000 / 1" | bc
+  elif rs "$STR" kB; then
+    echo "scale=0; ${STR/ kB/} * 1000 / 1" | bc
+  else
+    echo "$STR"
   fi
+}
+
+isp_tigo_promotion_update(){
   log Getting promotion
-  P=$( isp_tigo_promotion_get ) 
+  P=$( isp_tigo_promotion_get )
   if [ "$P" ]; then
     echo $P > $PLEFT
   fi
@@ -106,14 +118,14 @@ isp_tigo_promotion_update(){
 isp_tigo_credit_add(){
   STR=$( get_ussd "123*$1" )
   log "Added credit $STR"
-  ips_tigo_credit_update
+  isp_tigo_credit_update
   echo $STR
 }
 
 isp_tigo_credit_send(){
   STR=$( get_ussd "190*1234*235$2*$1" )
   log "Sent credit $2 to $1 -> $STR"
-  ips_tigo_credit_update
+  isp_tigo_credit_update
   echo $STR
 }
 
@@ -126,15 +138,11 @@ isp_tigo_credit_get(){
 }
 
 isp_tigo_credit_update(){
-  if [ ! "$LOGDIR" ]; then
-    return
-  fi
   log Getting credit
   C=$( isp_tigo_credit_get )
   if [ "$C" ]; then
     echo $C | sed -e "s/\..*//" > $CLEFT
   fi
-  isp_update_vars
 }
 
 #
@@ -142,13 +150,19 @@ isp_tigo_credit_update(){
 #
 
 isp_connection_start(){
-  pon tigo
-  echo $( date +%s ) > $CONNSTAT-start
+  if ! grep -q starting $TIGO_STATUS; then
+    actionlog Starting tigo-connection
+    pon tigo
+    echo $( date +%s ) > $CONNSTAT-start
+    echo starting > $TIGO_STATUS
+  fi
 }
 
 isp_connection_status(){
   if grep_pppd | grep -q failed; then
-    echo -1
+    isp_connection_stop
+    isp_connection_start
+    echo 0
     return
   fi
   PPP=$( ip link | grep " ppp" | sed -e "s/.*\(ppp.\).*/\1/" )
@@ -167,15 +181,34 @@ isp_connection_status(){
 }
 
 isp_connection_stop(){
-  while poff -a; do sleep 1; done
+  if ! grep -q stopping $TIGO_STATUS; then
+    echo stopping > $TIGO_STATUS
+    actionlog Stopping tigo-connection
+    while poff -a; do sleep 2; done
+  fi
+  isp_tigo_promotion_update
+}
+
+isp_connected(){
+  if ifconfig | grep -q ppp; then
+    echo yes
+  else
+    echo no
+  fi
 }
 
 isp_update_vars(){
-  if [ ! "$LOGDIR" ]; then
+  if [ ! "$CLEFT$PLEFT" ]; then
     return
   fi
+  if [ ! -f $CLEFT ]; then
+    isp_tigo_credit_update
+  fi
   CREDIT_LEFT=$( cat $CLEFT )
-  PROMOTION_LEFT=$( cat $PLEFT )
+  if [ ! -f $PLEFT ]; then
+    isp_tigo_promotion_update
+  fi
+  PROMOTION_LEFT=$(( $( cat $PLEFT ) - $( ppp_rx ) - $( ppp_tx ) ))
 }
 
 isp_update_vars

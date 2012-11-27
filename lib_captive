@@ -1,35 +1,40 @@
 #!/bin/sh
+#
+# The captive library.
+#
+# Iptable-rules:
+# filter:FCAPTIVE - should be called at the end of the filter:FORWARD-table
+#   allows new users and finishes with a BLOCK
+# nat:CAPTIVE - should be called at the end of the nat:PREROUTING-table
+#   redirects all paying users to the nat:INTERNET rule, before DNATting them
+#   to the localhost
+# nat:INTERNET - redirects to the proxy or direct
+#   internet-access
 
 if [ "$LIB_CAPTIVE" = "loaded" ]; then
   return
 fi
 LIB_CAPTIVE=loaded
 
+IPS_IDLE=$RUN/ips_idle
 MAC_LIST=$LOG/allowed_macs
 IP_LIST=$LOG/allowed_ips
+touch $MAC_LIST $IP_LIST $IPS_IDLE
+
+IPNAT="iptables -t nat"
 
 captive_ip(){
-  ACTION=${3:-ACCEPT}
-  iptables $1 FCAPTIVE -s $2 -j $ACTION
-  iptables $1 FCAPTIVE -d $2 -j $ACTION
-  if [ ! "$3" ]; then
-    ACTION=${3:-INTERNET}
-    iptables -t nat $1 CAPTIVE -s $2 -j $ACTION
-  fi
+  iptables $1 FCAPTIVE -s $2 -j ACCEPT
+  iptables $1 FCAPTIVE -d $2 -j ACCEPT
+  $IPNAT $1 CAPTIVE -s $2 -j INTERNET
 }
 
 captive_ip_accept(){
-  captive_ip -D $1 DROP
-  if iptables -L FCAPTIVE -nv | grep -q $1; then
-    actionlog "Found $1 still in iptables!"
-    captive_ip -D $1
-  fi
   captive_ip -I $1
 }
 
 captive_ip_deny(){
   captive_ip -D $1
-  captive_ip -I $1 DROP
 }
 
 captive_ip_check(){
@@ -55,7 +60,7 @@ captive_mac_accept(){
   if ! iptables -L FCAPTIVE -n | grep -qi $1; then
     MAC_IPT="-m mac --mac-source $1"
     iptables -I FCAPTIVE $MAC_IPT -j ACCEPT
-    iptables -t nat -I CAPTIVE $MAC_IPT -j INTERNET
+    $IPNAT -I CAPTIVE $MAC_IPT -j INTERNET
   fi
 }
 
@@ -63,7 +68,7 @@ captive_mac_deny(){
   if iptables -L FCAPTIVE -n | grep -qi $1; then
     MAC_IPT="-m mac --mac-source $1"
     iptables -D FCAPTIVE $MAC_IPT -j ACCEPT
-    iptables -t nat -D CAPTIVE $MAC_IPT -j INTERNET
+    $IPNAT -D CAPTIVE $MAC_IPT -j INTERNET
   fi
 }
 
@@ -88,10 +93,28 @@ captive_mac_del(){
 
 captive_clear(){
   actionlog Clearing IPs and refreshing MACs
-  iptables -t nat -F CAPTIVE
-  iptables -t nat -I CAPTIVE -j RETURN
+  $IPNAT -F CAPTIVE
   iptables -F FCAPTIVE
   iptables -I FCAPTIVE -j RETURN
+
+  ALLOW_DHCP=${ALLOW_DHCP:-255.255.255.255}
+  INTERNAL_IPS=${INTERNAL_IPS:-$( ip addr | grep "inet " | sed -e "s/.*inet \([^\/ ]*\).*/\1/" | grep -v 127.0.0.1 )}
+  echo Internal is $INTERNAL_IPS
+  for ip in $ALLOW_DHCP $INTERNAL_IPS $ALLOW_DST; do
+    echo Allowing requests to $ip to go through
+    $IPNAT -I NOCAPTIVE -d $ip -j ACCEPT
+    iptables -I FCAPTIVE -d $ip -j ACCEPT
+  done
+
+  for ip in $ALLOW_SRC; do
+    echo Allowing requests from $ip to go through
+    $IPNAT -I NOCAPTIVE -s $ip -j ACCEPT
+    iptables -I FCAPTIVE -s $ip -j ACCEPT
+  done
+
+  FIRST_INTERNAL=$( echo $INTERNAL_IPS | sed -e "s/ .*//" )
+  $IPNAT -I CAPTIVE -j DNAT --to-dest ${CAPTIVE_DNAT:-$FIRST_INTERNAL}
+
   for ip in $( cat $IP_LIST ); do
     captive_ip_accept $ip
   done
@@ -103,27 +126,103 @@ captive_clear(){
 captive_accept_all(){
   captive_clear
   iptables -A FCAPTIVE -j ACCEPT
-  iptables -t nat -I CAPTIVE -j INTERNET
+  $IPNAT -I CAPTIVE -j INTERNET
 }
 
 # This can be called from time to time to check on idle people
 captive_cleanup(){
-  for ips in $( ips_connected ); do
-    PACKETS=$( iptables -L FCAPTIVE -nv | grep $ips | head -n 1 | sed -e "s/ *\([^ ]*\).*/\1/" )
-    log Checking ip $ips - has $PACKETS packets
-    if [ ! "$PACKETS" ]; then
-      actionlog Still in $USERS_CONNECTED, but not in iptables
-      users_connected_delete $ips
-    elif [ "$PACKETS" = 0 ]; then
-      actionlog No packets, kicking $ips
-      captive_ip_deny $ips
-      users_connected_delete $ips
-    fi
-  done
+  if [ "$( isp_connection_status )" -lt 4 ]; then
+    log not really connected
+    return
+  fi
+  if [ "$( ips_connected )" ]; then
+    for ip in $( ips_connected ); do
+      PACKETS=$( iptables -L FCAPTIVE -nv | grep $ip | head -n 1 | sed -e "s/ *\([^ ]*\).*/\1/" )
+      log Checking ip $ip - has $PACKETS packets
+      if [ ! "$PACKETS" ]; then
+        actionlog Still in $USERS_CONNECTED, but not in iptables
+        users_connected_delete $ip
+        remove_line "^$ip\$" $IPS_IDLE
+      elif [ "$PACKETS" = 0 ]; then
+        if egrep -q "^$ip\$" $IPS_IDLE; then
+          actionlog No packets, kicking $ip
+          user_disconnect_ip $ip
+          remove_line "^$ip\$" $IPS_IDLE
+        else
+          log $ip is idle, adding to list
+          echo $ip >> $IPS_IDLE
+        fi
+      else
+        remove_line "^$ip\$" $IPS_IDLE 
+      fi
+    done
+  elif [ "$CONNECTION_TYPE" = "ondemand" ]; then
+    isp_connection_stop
+  fi
 #  log Clearing counters
   iptables -Z FCAPTIVE
-  cp $USERS_CONNECTED $USERS_CONNECTED.tmp
+#  cp $USERS_CONNECTED $USERS_CONNECTED.tmp
+}
+
+delete_chain(){
+  PARENT="$1"
+  CHAIN="$2"
+  IPT="iptables"
+  if [ "$3" ]; then
+    IPT="$IPT -t $3"
+  fi
+  if $IPT -L $PARENT -n | grep -q $CHAIN; then
+    if [ "$PARENT" ]; then
+      $IPT -D $PARENT -j $CHAIN
+    fi
+    $IPT -F $CHAIN
+    $IPT -X $CHAIN
+  fi
+  $IPT -N $CHAIN
+  if [ "$PARENT" ]; then
+    $IPT -I $PARENT -j $CHAIN
+  fi
 }
 
 captive_setup(){
+  echo Setting up
+  PREROUTING=${PREROUTING:-PREROUTING}
+  delete_chain $PREROUTING CAPTIVE nat
+#  if $IPNAT -L $PREROUTING -n | grep -q CAPTIVE; then
+#    $IPNAT -D $PREROUTING -j CAPTIVE
+#    $IPNAT -F CAPTIVE
+#    $IPNAT -X CAPTIVE
+#  fi
+#  $IPNAT -N CAPTIVE
+#  $IPNAT -I $PREROUTING -j CAPTIVE
+
+  delete_chain $PREROUTING NOCAPTIVE nat
+
+  delete_chain "" INTERNET nat
+#  if $IPNAT -L | grep -q INTERNET; then
+#    $IPNAT -F INTERNET
+#    $IPNAT -X INTERNET
+#  fi
+#  $IPNAT -N INTERNET
+  if [ "$HTTP_PROXY" ]; then
+    $IPNAT -A INTERNET -p tcp --dport 80 -j DNAT --to-dest $HTTP_PROXY
+  fi
+  $IPNAT -A INTERNET -j ACCEPT
+
+  delete_chain FORWARD FCAPTIVE
+#  if iptables -L FORWARD -n | grep -q FCAPTIVE; then
+#    iptables -D FORWARD -j FCAPTIVE
+#    iptables -F FCAPTIVE
+#    iptables -X FCAPTIVE
+#  fi
+#  iptables -N FCAPTIVE
+#  iptables -I FORWARD -j FCAPTIVE
+  iptables -I FCAPTIVE -j RETURN
+  iptables -P FORWARD DROP
+
+  captive_clear
+}
+
+captive_block(){
+  log Blocking $1
 }

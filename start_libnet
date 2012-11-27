@@ -1,0 +1,15 @@
+#!/bin/bash
+
+logger -s "Starting LibNet"
+cd $( dirname $0 )
+if pgrep -f ruby.*LibNet; then
+  logger -s "Killing old LibNet"
+  pkill -f ruby.*LibNet
+  logger -s "Waiting for 2 seconds"
+  sleep 2
+  logger -s "Killing old LibNet with -9"
+  pkill -9 -f ruby.*LibNet
+fi
+logger -s "Starting new LibNet"
+screen -S LibNet -d -m ./LibNet.rb
+

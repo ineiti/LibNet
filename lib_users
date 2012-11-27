@@ -1,7 +1,8 @@
 #!/bin/bash
 
 USERS=/etc/captive.users
-USERS_CONNECTED=$RUN/aon_connected
+USERS_CONNECTED=$RUN/connected
+touch $USERS_CONNECTED
 
 users_connected_delete(){
   egrep -v "^$1 " $USERS_CONNECTED > /tmp/uc
@@ -76,5 +77,73 @@ users_low_level(){
     fi
   done
   echo -n $USERS_LOW
+}
+
+user_connected(){
+  log "Searching if user $1 is connected"
+  if users_connected | egrep -q "^$1\$"; then
+    echo yes
+  else
+    echo no
+  fi
+}
+
+user_connect(){
+  IP=$1
+  NAME=$2
+
+  isp_connect
+
+  if [ $( user_connected $NAME ) = "yes" ]; then
+    log User $NAME already connected
+  else
+    echo $IP $NAME >> $USERS_CONNECTED
+    captive_ip_add $IP
+  fi
+}
+
+user_disconnect_name(){
+  user_disconnect $( egrep " $1\$" $USERS_CONNECTED )
+}
+
+user_disconnect_ip(){
+  user_disconnect $( egrep "^$1 " $USERS_CONNECTED )
+}
+
+user_disconnect(){
+  IP=$1
+  NAME=$2
+
+  if [ ! "$1" -o ! "$2" ]; then
+    return
+  fi
+  if [ $( user_connected $NAME ) = "yes" ]; then
+    egrep -v "^$IP $NAME\$" $USERS_CONNECTED > /tmp/users.connected
+    mv /tmp/users.connected $USERS_CONNECTED
+    captive_ip_del $IP
+  else
+    log User $NAME is not connected
+  fi
+
+  if [ ! -s $USERS_CONNECTED ]; then
+    isp_may_disconnect
+  fi
+}
+
+user_cost_max(){
+  COST_MAX=$(( COST_BASE + COST_SHARED ))
+  log Maximum cost is $COST_MAX
+  echo $COST_MAX
+}
+
+user_cost_now(){
+  USERS_CONNECTED=$( users_connected | wc -l )
+  if [ "$USERS_CONNECTED" -gt 0 ]; then
+    COST=$(( COST_BASE + COST_SHARED / USERS_CONNECTED ))
+  else
+    COST=$(( COST_BASE + COST_SHARED ))
+  fi
+  log Cost per user is $COST
+  echo $COST
 }
 

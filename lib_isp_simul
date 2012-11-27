@@ -1,0 +1,54 @@
+#!/bin/bash
+
+isp_restart(){
+  log Restart
+}
+
+isp_connect(){
+  log Connect
+}
+
+isp_may_disconnect(){
+  log May disconnect
+}
+
+isp_disconnect(){
+  log Disconnect
+}
+
+isp_connection_start(){
+  log Connection_start
+  echo 4 > $RUN/connection_status
+}
+
+isp_connection_stop(){
+  log Connection_stop
+  echo 0 > $RUN/connection_status
+}
+
+isp_connection_status(){
+  cat $RUN/connection_status
+}
+
+isp_status_simul(){
+  while true; do 
+    for a in $( seq 0 4 ); do 
+      echo Going for status $a
+      echo $a > $RUN/connection_status
+      sleep 6
+    done
+  done
+}
+
+isp_connected(){
+  if grep -q 4 $RUN/connection_status; then
+    echo yes
+  else
+    echo no
+  fi
+}
+
+test -f $RUN/promotion || echo 0 > $RUN/promotion
+test -f $RUN/credit|| echo 0 > $RUN/credit
+PROMOTION_LEFT=$( cat $RUN/promotion )
+CREDIT_LEFT=$( cat $RUN/credit )

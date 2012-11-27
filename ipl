@@ -1,0 +1,5 @@
+#!/bin/bash
+
+iptables -L -nv
+echo
+iptables -t nat -L -nv

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Example of a captive-configuration
+
+# The ISP - for the moment we have Prestabist, Tigo and Simul(ation)
+ISP=simul
+
+ISP_FILE=$PWD/multiconf-captive-$ISP
+if [ -f $ISP_FILE ]; then
+  . ./$ISP_FILE
+else
+  # Connection-type - permanent or ondemand
+  CONNECTION_TYPE=ondemand
+
+  # Cost per minute
+  # Base cost
+  COST_BASE=5
+  # Cost shared between users
+  COST_SHARED=10
+
+  # Is there a promotion-thing like habing 1 Go/month?
+  HAS_PROMO=false
+
+  # Does this connection have credit that we should track?
+  HAS_CREDIT=false
+fi
+
+# The table where to attache the captive - has to be linked with PREROUTING
+#PREROUTING=PREROUTING
+
+# Where the HTTP-proxy resides - this has to be a transparent proxy
+HTTP_PROXY=192.168.4.1:3128
+
+# Destinations to allow always
+#ALLOW_DST=""
+
+# Override internal IP detection
+#INTERNAL_IPS=""
+
+# Set to space to disallow DHCP-requests - if empty, will allow anyway
+#ALLOW_DHCP=" "
+
+# Where to redirect the packets for non-authenticated users
+#CAPTIVE_DNAT=""

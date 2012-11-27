@@ -5,9 +5,42 @@ isp_connection_start(){
 }
 
 isp_connection_status(){
-  echo "0: unknown"
+  echo "4"
 }
 
 isp_connection_stop(){
   ifdown wan
+}
+
+isp_restart_wwan(){ 
+  /etc/init.d/firewall restart 
+  killall -9 wwan 
+  sort /etc/captive/aon_connected | uniq > /tmp/ac 
+  mv /tmp/ac /etc/captive/aon_connected 
+  /etc/init.d/wwan restart 
+} 
+ 
+if [ "$FUNC" ]; then 
+  $FUNC $@ 
+fi 
+ 
+isp_check_double_wwan(){ 
+  WWANS=$( ps ax | grep /usr/bin/wwan | wc -l ) 
+  if [ $WWANS -gt 2 ]; then 
+    actionlog Restarting wwan because it has $WWANS... 
+    ps ax 
+    isp_restart_wwan 
+  fi 
+}     
+
+isp_may_disconnect(){
+  actionlog Not disconnecting
+}
+
+isp_connected(){
+  if ifconfig | grep -q ppp0; then
+    echo yes
+  else
+    echo no
+  fi
 }

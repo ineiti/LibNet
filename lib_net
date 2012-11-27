@@ -13,30 +13,48 @@
 PWD=$( dirname $0 )
 RUN=/var/run/lib-net
 LOG=/var/log/lib-net
+DATE=$( date +%y%m%d-%H.%M )
+PATH=$PATH:/sbin:/usr/sbin
+if [ -x /etc/multiconf/conf.d/captive ]; then
+  . /etc/multiconf/conf.d/captive
+else
+  if [ ! -x $PWD/multiconf-captive ]; then
+    cp $PWD/multiconf-captive.orig $PWD/multiconf-captive
+  fi
+  . $PWD/multiconf-captive
+fi
+if [ "$ISP" = "simul" ]; then
+  LOG=$PWD/log
+  RUN=$PWD/run
+  iptables(){
+    log Iptables $@
+  }
+  ip(){
+    log ip $@
+  }
+fi
 CONNSTAT=$RUN/connection
 MSGS=$LOG/msgs.log
 ACTIONLOG=$LOG/action.log
-DATE=$( date +%y%m%d-%H.%M )
-PATH=$PATH:/sbin:/usr/sbin
-test -f /etc/captive.conf && . /etc/captive.conf
 
 mkdir -p $RUN $LOG
-sudo chown -R www-data.www-data $RUN $LOG
-
-for lib in captive isp misc; do
-  . $PWD/lib_$lib
-done
+if [ "$ISP" != "simul" ]; then
+  sudo chown -R www-data.www-data $RUN $LOG
+fi
 
 #
 # Different kind of logging facilities
 #
 
 msg() {
-  date "+%F %R - $1: $2" >> $MSGS
+  WHO=$1
+  shift
+  echo $( date +%F_%R ) - $WHO: $@ >> $MSGS
 }
 
 log(){
-  logger -- $@
+  msg logger "$@"
+#  logger -- $@
 }
 
 actionlog(){
@@ -45,31 +63,17 @@ actionlog(){
 }
 
 #
+# Loading of other libraries
 #
+
+for lib in misc users captive isp; do
+  . $PWD/lib_$lib
+done
+
 #
-
-restart_wwan(){
-  /etc/init.d/firewall restart
-  killall -9 wwan
-  sort /etc/captive/aon_connected | uniq > /tmp/ac
-  mv /tmp/ac /etc/captive/aon_connected
-  /etc/init.d/wwan restart
-}
-
-if [ "$FUNC" ]; then
-  $FUNC $@
-fi
-
-check_double_wwan(){
-  WWANS=$( ps ax | grep /usr/bin/wwan | wc -l )
-  if [ $WWANS -gt 2 ]; then
-    actionlog Restarting wwan because it has $WWANS...
-    ps ax
-    #restart_wwan
-  fi
-}    
-
 # Let's call an eventual function and print some variables
+#
+
 if [ "$1" ]; then
   VAR=""
   if [ $1 = print ]; then
