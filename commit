@@ -4,3 +4,5 @@ cd ../QooxView
 hg commit -m "$@"
 git commit -a -m "$@"
 cd ../Gestion
+hg commit -m "$@"
+git commit -a -m "$@"
