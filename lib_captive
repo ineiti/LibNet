@@ -19,7 +19,8 @@ LIB_CAPTIVE=loaded
 IPS_IDLE=$RUN/ips_idle
 MAC_LIST=$LOG/allowed_macs
 IP_LIST=$LOG/allowed_ips
-touch $MAC_LIST $IP_LIST $IPS_IDLE
+RESTRICTED=$RUN/restricted
+touch $MAC_LIST $IP_LIST $IPS_IDLE $RESTRICTED
 
 IPNAT="iptables -t nat"
 
@@ -27,6 +28,11 @@ captive_ip(){
   iptables $1 FCAPTIVE -s $2 -j ACCEPT
   iptables $1 FCAPTIVE -d $2 -j ACCEPT
   $IPNAT $1 CAPTIVE -s $2 -j INTERNET
+}
+
+captive_ip_drop(){
+  iptables $1 FCAPTIVE -s $2 -j DROP
+  iptables $1 FCAPTIVE -d $2 -j DROP
 }
 
 captive_ip_accept(){
@@ -188,41 +194,86 @@ captive_setup(){
   echo Setting up
   PREROUTING=${PREROUTING:-PREROUTING}
   delete_chain $PREROUTING CAPTIVE nat
-#  if $IPNAT -L $PREROUTING -n | grep -q CAPTIVE; then
-#    $IPNAT -D $PREROUTING -j CAPTIVE
-#    $IPNAT -F CAPTIVE
-#    $IPNAT -X CAPTIVE
-#  fi
-#  $IPNAT -N CAPTIVE
-#  $IPNAT -I $PREROUTING -j CAPTIVE
 
   delete_chain $PREROUTING NOCAPTIVE nat
 
   delete_chain "" INTERNET nat
-#  if $IPNAT -L | grep -q INTERNET; then
-#    $IPNAT -F INTERNET
-#    $IPNAT -X INTERNET
-#  fi
-#  $IPNAT -N INTERNET
   if [ "$HTTP_PROXY" ]; then
     $IPNAT -A INTERNET -p tcp --dport 80 -j DNAT --to-dest $HTTP_PROXY
   fi
   $IPNAT -A INTERNET -j ACCEPT
 
   delete_chain FORWARD FCAPTIVE
-#  if iptables -L FORWARD -n | grep -q FCAPTIVE; then
-#    iptables -D FORWARD -j FCAPTIVE
-#    iptables -F FCAPTIVE
-#    iptables -X FCAPTIVE
-#  fi
-#  iptables -N FCAPTIVE
-#  iptables -I FORWARD -j FCAPTIVE
   iptables -I FCAPTIVE -j RETURN
   iptables -P FORWARD DROP
 
   captive_clear
+
+  for ip in $( ips_connected ); do
+    captive_ip_accept $ip
+  done
+
+  if [ "$( captive_restriction_get )" ]; then
+    captive_restriction_set $( captive_restriction_get )
+  fi
 }
 
 captive_block(){
   log Blocking $1
+}
+
+captive_rest_add(){
+  captive_ip_drop -I 10.0.10.0/21
+  captive_ip_drop -I 10.1.10.0/21
+  captive_ip_drop -I 10.2.10.0/21
+  captive_ip_accept 10.1.14.0/24
+  if [ "$1" ]; then
+    captive_ip_accept $1
+  fi
+}
+
+captive_rest_del(){
+  captive_ip_drop -D 10.0.10.0/21
+  captive_ip_drop -D 10.1.10.0/21
+  captive_ip_drop -D 10.2.10.0/21
+  captive_ip_deny 10.1.14.0/24
+  if [ "$1" ]; then
+    captive_ip_deny $1
+  fi
+}
+
+captive_rest_txt_ip(){
+  case "$1" in
+    info1)
+      echo 10.1.11.0/24
+      ;;
+    info2)
+      echo 10.1.11.0/24
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+captive_restriction_set(){
+  log restricting -$REST-
+  OLDREST=$( captive_restriction_get )
+  if [ "$OLDREST" ]; then
+    captive_rest_del $( captive_rest_txt_ip $OLDREST )
+  fi
+  REST=$1
+  case $REST in
+    info1|info2)
+      captive_rest_add $( captive_rest_txt_ip $REST )
+      ;;
+    *)
+      REST=""
+  esac
+  echo $REST > $RESTRICTED
+}
+
+captive_restriction_get(){
+  log Restriction get $( cat $RESTRICTED )
+  cat $RESTRICTED
 }

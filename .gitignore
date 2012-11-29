@@ -1,1 +1,5 @@
-multiconf-captive.*
+multiconf-captive*
+.hg
+log
+run
+test

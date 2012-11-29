@@ -5,9 +5,9 @@
 # The ISP - for the moment we have Prestabist, Tigo and Simul(ation)
 ISP=simul
 
-ISP_FILE=$PWD/multiconf-captive-$ISP
+ISP_FILE=$OLDPWD/multiconf-captive-$ISP
 if [ -f $ISP_FILE ]; then
-  . ./$ISP_FILE
+  . $ISP_FILE
 else
   # Connection-type - permanent or ondemand
   CONNECTION_TYPE=ondemand
@@ -29,7 +29,7 @@ fi
 #PREROUTING=PREROUTING
 
 # Where the HTTP-proxy resides - this has to be a transparent proxy
-HTTP_PROXY=192.168.4.1:3128
+#HTTP_PROXY=192.168.1.1:3128
 
 # Destinations to allow always
 #ALLOW_DST=""

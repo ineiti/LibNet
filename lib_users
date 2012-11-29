@@ -98,7 +98,7 @@ user_connect(){
     log User $NAME already connected
   else
     echo $IP $NAME >> $USERS_CONNECTED
-    captive_ip_add $IP
+    captive_ip_accept $IP
   fi
 }
 
@@ -120,7 +120,7 @@ user_disconnect(){
   if [ $( user_connected $NAME ) = "yes" ]; then
     egrep -v "^$IP $NAME\$" $USERS_CONNECTED > /tmp/users.connected
     mv /tmp/users.connected $USERS_CONNECTED
-    captive_ip_del $IP
+    captive_ip_deny $IP
   else
     log User $NAME is not connected
   fi
