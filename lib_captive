@@ -222,21 +222,28 @@ captive_block(){
   log Blocking $1
 }
 
+captive_rest_addr(){
+  for ip in 10.1.0.0/24 10.0.10.0/21 10.1.10.0/21 10.2.10.0/21; do
+    captive_ip_drop $1 $ip
+  done
+  if [ "$1" = "-I" ]; then
+    captive_ip_accept 10.9.0.0/16
+    captive_ip_accept 10.1.14.0/24
+  else
+    captive_ip_deny 10.9.0.0/16
+    captive_ip_deny 10.1.14.0/24
+  fi
+}
+
 captive_rest_add(){
-  captive_ip_drop -I 10.0.10.0/21
-  captive_ip_drop -I 10.1.10.0/21
-  captive_ip_drop -I 10.2.10.0/21
-  captive_ip_accept 10.1.14.0/24
+  captive_rest_addr -I
   if [ "$1" ]; then
     captive_ip_accept $1
   fi
 }
 
 captive_rest_del(){
-  captive_ip_drop -D 10.0.10.0/21
-  captive_ip_drop -D 10.1.10.0/21
-  captive_ip_drop -D 10.2.10.0/21
-  captive_ip_deny 10.1.14.0/24
+  captive_rest_addr -D
   if [ "$1" ]; then
     captive_ip_deny $1
   fi
@@ -248,7 +255,7 @@ captive_rest_txt_ip(){
       echo 10.1.11.0/24
       ;;
     info2)
-      echo 10.1.11.0/24
+      echo 10.1.12.0/24
       ;;
     *)
       echo ""
