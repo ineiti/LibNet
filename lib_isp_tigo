@@ -38,9 +38,11 @@ isp_tigo_promotion_add(){
     if [ "$PROMOTION" ]; then
       # Testing for new version which has a global config-file
       if [ -f /etc/gammu.conf ]; then
+        log Adding with gammu v2
         gammu sendsms TEXT $PROMOTION -text "kattir" 2>/dev/null
       else
-        echo kattir | gammu sendsms TEXT $PROMOTION 2>/dev/null
+        log Adding with gammu v1
+        echo kattir | gammu --config $PWD/gammurc sendsms TEXT $PROMOTION 2>/dev/null
       fi
     fi
   fi
