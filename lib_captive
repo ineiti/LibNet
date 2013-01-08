@@ -112,7 +112,13 @@ captive_clear(){
     iptables -I FCAPTIVE -d $ip -j ACCEPT
   done
 
-  for ip in $ALLOW_SRC; do
+  for ip in $ALLOW_SRC_PROXY; do
+    echo Allowing requests from $ip to go through Proxy
+    $IPNAT -I NOCAPTIVE -s $ip -j INTERNET
+    iptables -I FCAPTIVE -s $ip -j ACCEPT
+  done
+
+  for ip in $ALLOW_SRC_DIRECT; do
     echo Allowing requests from $ip to go through
     $IPNAT -I NOCAPTIVE -s $ip -j ACCEPT
     iptables -I FCAPTIVE -s $ip -j ACCEPT

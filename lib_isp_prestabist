@@ -5,7 +5,13 @@ isp_connection_start(){
 }
 
 isp_connection_status(){
-  echo "4"
+  if ! grep -q ppp0 /proc/net/dev; then
+    echo "0"
+  elif ! grep -q tun0 /proc/net/dev; then
+    echo "3"
+  else
+    echo "4"
+  fi
 }
 
 isp_connection_stop(){
