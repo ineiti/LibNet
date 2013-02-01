@@ -42,7 +42,7 @@ isp_tigo_promotion_add(){
         gammu sendsms TEXT $PROMOTION -text "kattir" 2>/dev/null
       else
         log Adding with gammu v1
-        echo kattir | gammu --config $PWD/gammurc sendsms TEXT $PROMOTION 2>/dev/null
+        echo kattir | gammu --config $PWD/conf/gammurc sendsms TEXT $PROMOTION 2>/dev/null
       fi
     fi
   fi
@@ -137,6 +137,18 @@ isp_tigo_credit_get(){
   if rs "$STR" solde; then
     echo $STR | sed -e "s/.*est de \([0-9]*\)\..*/\1/"
   fi
+}
+
+isp_tigo_get_cell(){
+  STR=$( gcom_call get_cell )
+  log "Got cell $STR"
+  echo $STR
+}
+
+isp_tigo_get_signal(){
+  STR=$( gcom_call get_signal )
+  log "Got signal $STR"
+  echo $STR
 }
 
 isp_tigo_credit_update(){
