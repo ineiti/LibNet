@@ -97,12 +97,20 @@ user_connect(){
   if [ $( user_connected $NAME ) = "yes" ]; then
     log User $NAME already connected
   else
+    KEEP_PPP=""
     if egrep -q "^$IP " $USERS_CONNECTED; then
       log IP $IP already connected, first disconnecting old user
+      KEEP_PPP="$IP keep_ppp"
+      echo $KEEP_PPP >> $USERS_CONNECTED
       user_disconnect_ip $IP
     fi
+
+    log Connecting user $NAME - $IP
     echo $IP $NAME >> $USERS_CONNECTED
     captive_ip_accept $IP
+    if [ "$KEEP_PPP" ]; then
+      user_disconnect $KEEP_PPP
+    fi
   fi
 }
 
@@ -112,7 +120,9 @@ user_disconnect_name(){
 
 user_disconnect_ip(){
   for ip in $( egrep "^$1 " $USERS_CONNECTED | sed -e "s/ /:/" ); do
-    user_disconnect $( echo $ip | sed -e "s/:/ /" )
+    U=$( echo $ip | sed -e "s/:/ /" )
+    log Disconnecting -$U-
+    user_disconnect $U
   done
 }
 
@@ -120,10 +130,12 @@ user_disconnect(){
   IP=$1
   NAME=$2
 
+  log Got user $NAME from $IP
   if [ ! "$1" -o ! "$2" ]; then
     return
   fi
   if [ $( user_connected $NAME ) = "yes" ]; then
+    log Doing disconnection of $NAME
     egrep -v "^$IP $NAME\$" $USERS_CONNECTED > /tmp/users.connected
     mv /tmp/users.connected $USERS_CONNECTED
     captive_ip_deny $IP

@@ -167,6 +167,11 @@ isp_connection_start(){
   if ! grep -q starting $TIGO_STATUS; then
     actionlog Starting tigo-connection
     pon tigo
+    sleep 4
+    if ! ps ax | grep -q pppd; then
+      actionlog Oups - restarting connection
+      pon tigo
+    fi
     echo $( date +%s ) > $CONNSTAT-start
     echo starting > $TIGO_STATUS
   fi

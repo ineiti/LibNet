@@ -18,11 +18,24 @@ PATH=$PATH:/sbin:/usr/sbin
 if [ -x /etc/multiconf/conf.d/captive ]; then
   . /etc/multiconf/conf.d/captive
 else
-  if [ ! -x $PWD/multiconf-captive ]; then
-    cp $PWD/multiconf-captive.orig $PWD/multiconf-captive
+  if pwd | egrep -q "/Test$"; then
+    . $( pwd )/multiconf-captive
+    RUN=$(pwd)/run
+    LOG=$(pwd)/log
+    iptables(){
+      log Iptables $@
+    }
+    ip(){
+      log ip $@
+    }
+  else
+    if [ ! -x $PWD/multiconf-captive ]; then
+      cp $PWD/multiconf-captive.orig $PWD/multiconf-captive
+    fi
+    . $PWD/multiconf-captive
   fi
-  . $PWD/multiconf-captive
 fi
+
 if [ "$ISP" = "simul" ]; then
   LOG=$PWD/log
   RUN=$PWD/run
