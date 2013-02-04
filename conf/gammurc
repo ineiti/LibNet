@@ -1,0 +1,5 @@
+[gammu]
+
+port = /dev/ttyUSB2
+connection = at115200
+
