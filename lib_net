@@ -51,7 +51,7 @@ MSGS=$LOG/msgs.log
 ACTIONLOG=$LOG/action.log
 
 mkdir -p $RUN $LOG
-if [ "$ISP" != "simul" ]; then
+if [ "$ISP" != "simul" -a "$ISP" != "test" ]; then
   sudo chown -R www-data.www-data $RUN $LOG
 fi
 
@@ -66,12 +66,17 @@ msg() {
 }
 
 log(){
-  msg logger "$@"
+  msg simple "$@"
+#  logger -- $@
+}
+
+logf(){
+  msg function "$@"
 #  logger -- $@
 }
 
 actionlog(){
-  log $@
+  msg action $@
   echo $DATE $@ >> $ACTIONLOG
 }
 

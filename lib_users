@@ -80,7 +80,7 @@ users_low_level(){
 }
 
 user_connected(){
-  log "Searching if user $1 is connected"
+  logf user_connected $1
   if users_connected | egrep -q "^$1\$"; then
     echo yes
   else
@@ -89,19 +89,22 @@ user_connected(){
 }
 
 user_connect(){
-  IP=$1
-  NAME=$2
+  local IP=$1
+  local NAME=$2
+  logf user_connect :$IP:$NAME:
 
   isp_connect
 
   if [ $( user_connected $NAME ) = "yes" ]; then
     log User $NAME already connected
   else
-    KEEP_PPP=""
+    local KEEP_PPP=""
     if egrep -q "^$IP " $USERS_CONNECTED; then
-      log IP $IP already connected, first disconnecting old user
-      KEEP_PPP="$IP keep_ppp"
+      KEEP_PPP="keep_$IP keep_$USER"
+      log IP $IP already connected, first adding $KEEP_PPP user
       echo $KEEP_PPP >> $USERS_CONNECTED
+
+      log now disconnecting old user
       user_disconnect_ip $IP
     fi
 
@@ -120,17 +123,17 @@ user_disconnect_name(){
 
 user_disconnect_ip(){
   for ip in $( egrep "^$1 " $USERS_CONNECTED | sed -e "s/ /:/" ); do
-    U=$( echo $ip | sed -e "s/:/ /" )
+    local U=$( echo $ip | sed -e "s/:/ /" )
     log Disconnecting -$U-
     user_disconnect $U
   done
 }
 
 user_disconnect(){
-  IP=$1
-  NAME=$2
+  local IP=$1
+  local NAME=$2
+  logf user_disconnect :$IP:$NAME:
 
-  log Got user $NAME from $IP
   if [ ! "$1" -o ! "$2" ]; then
     return
   fi
@@ -149,17 +152,17 @@ user_disconnect(){
 }
 
 user_cost_max(){
-  COST_MAX=$(( COST_BASE + COST_SHARED ))
-  log Maximum cost is $COST_MAX
+  local COST_MAX=$(( COST_BASE + COST_SHARED ))
+  logf user_cost_max is $COST_MAX
   echo $COST_MAX
 }
 
 user_cost_now(){
-  USERS_CONNECTED=$( users_connected | wc -l )
+  local USERS_CONNECTED=$( users_connected | wc -l )
   if [ "$USERS_CONNECTED" -gt 0 ]; then
-    COST=$(( COST_BASE + COST_SHARED / USERS_CONNECTED ))
+    local COST=$(( COST_BASE + COST_SHARED / USERS_CONNECTED ))
   else
-    COST=$(( COST_BASE + COST_SHARED ))
+    local COST=$(( COST_BASE + COST_SHARED ))
   fi
   log Cost per user is $COST
   echo $COST
