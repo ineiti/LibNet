@@ -19,20 +19,24 @@ touch $TIGO_STATUS $CLEFT $PLEFT
 #
 
 isp_tigo_promotion_add(){
-  log Promotion add $1
+  log Promotion add $1 from user $2
   if [ "$1" ]; then
     case "$1" in
       hour|30MB)
         PROMOTION=1111
+        COST=800
         ;;
       day|100MB)
         PROMOTION=2424
+        COST=2500
         ;;
       week|1GB)
         PROMOTION=7777
+        COST=15000
         ;;
       month|5GB)
         PROMOTION=3030
+        COST=50000
         ;;
     esac
     if [ "$PROMOTION" ]; then
@@ -48,6 +52,13 @@ isp_tigo_promotion_add(){
   fi
   isp_tigo_promotion_update
   isp_tigo_credit_update
+  if [ "$PROMOTION_LEFT" -gt 20000000 ]; then
+    log Promotion successful: user:$2 added promotion:$1 now promotion_left:$PROMOTION_LEFT and cost:$COST
+  fi
+}
+
+isp_tigo_promotion_list(){
+  grep "Promotion successful" $LOG
 }
 
 isp_tigo_promotion_get_raw(){
