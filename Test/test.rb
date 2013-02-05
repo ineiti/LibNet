@@ -3,7 +3,7 @@ require 'test/unit'
 
 DEBUG_LVL=2
 
-require 'QooxView'
+#require 'QooxView'
 require 'LibNet'
 
 $lib_net = LibNet.new

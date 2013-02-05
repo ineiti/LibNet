@@ -115,13 +115,17 @@ captive_clear(){
   for ip in $ALLOW_SRC_PROXY; do
     echo Allowing requests from $ip to go through Proxy
     $IPNAT -I NOCAPTIVE -s $ip -j INTERNET
+    $IPNAT -I NOCAPTIVE -d $ip -j INTERNET
     iptables -I FCAPTIVE -s $ip -j ACCEPT
+    iptables -I FCAPTIVE -d $ip -j ACCEPT
   done
 
   for ip in $ALLOW_SRC_DIRECT; do
     echo Allowing requests from $ip to go through
     $IPNAT -I NOCAPTIVE -s $ip -j ACCEPT
+    $IPNAT -I NOCAPTIVE -d $ip -j ACCEPT
     iptables -I FCAPTIVE -s $ip -j ACCEPT
+    iptables -I FCAPTIVE -d $ip -j ACCEPT
   done
 
   FIRST_INTERNAL=$( echo $INTERNAL_IPS | sed -e "s/ .*//" )
@@ -141,15 +145,27 @@ captive_accept_all(){
   $IPNAT -I CAPTIVE -j INTERNET
 }
 
+captive_packets_count(){
+  echo $( iptables -L FCAPTIVE -nv | grep $1 | head -n 1 | 
+    sed -e "s/ *\([^ ]*\).*/\1/" )
+}
+
 # This can be called from time to time to check on idle people
 captive_cleanup(){
-  if [ "$( isp_connection_status )" -lt 4 ]; then
+  local CS=$( isp_connection_status )
+  if [ "$CS" = 0 ]; then
+    if [ "$( ips_connected )" ]; then
+      log "Disconnecting everybody as we're not connected"
+      users_disconnect_all
+    fi
+    return
+  elif [ "$CS" -lt 4 ]; then
     log not really connected
     return
   fi
   if [ "$( ips_connected )" ]; then
     for ip in $( ips_connected ); do
-      PACKETS=$( iptables -L FCAPTIVE -nv | grep $ip | head -n 1 | sed -e "s/ *\([^ ]*\).*/\1/" )
+      PACKETS=$( captive_packets_count $ip )
       log Checking ip $ip - has $PACKETS packets
       if [ ! "$PACKETS" ]; then
         actionlog Still in $USERS_CONNECTED, but not in iptables

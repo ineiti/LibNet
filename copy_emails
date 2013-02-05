@@ -1,7 +1,5 @@
 #!/bin/bash
 
-exit
-
 ARGS="--inplace --sockopts=SO_SNDBUF=20000,SO_RCVBUF=20000 --password-file /etc/rsync.pass -Paivz"
 DEST=rsync://profeda@vpn.markas-al-nour.org/postfix
 LOG=/var/log/copy_email.log

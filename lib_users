@@ -129,6 +129,14 @@ user_disconnect_ip(){
   done
 }
 
+users_disconnect_all(){
+  for ip in $( sed -e "s/ /:/" $USERS_CONNECTED ); do
+    local U=$( echo $ip | sed -e "s/:/ /" )
+    log Disconnecting -$U-
+    user_disconnect $U
+  done
+}
+
 user_disconnect(){
   local IP=$1
   local NAME=$2

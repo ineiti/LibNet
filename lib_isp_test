@@ -5,19 +5,37 @@ if [ "$LIB_TEST" = "loaded" ]; then
 echo
 fi
 LIB_TEST=loaded
+
+init_runfile(){
+  if [ ! -f $1 ]; then
+    echo -n $2 > $1
+  fi
+}
 CONN_STATUS=$RUN/connection_status
+PACKETS_COUNT=$RUN/packets_count
+init_runfile $CONN_STATUS 0
+init_runfile $PACKETS_COUNT 1
 
 #
 # Connection-start, status, stop
 #
 
 isp_connection_start(){
-  actionlog Starting connection
-  echo 4 > $CONN_STATUS
+  if [ "$( cat $CONN_STATUS )" -gt 0 ]; then
+    actionlog Already started the connection
+  else
+    actionlog Starting connection
+    echo 0 > $CONN_STATUS
+  fi
+}
+
+isp_connection_status_set(){
+  actionlog Setting status to $1
+  echo $1 > $CONN_STATUS
 }
 
 isp_connection_status(){
-  echo $CONN_STATUS
+  cat $CONN_STATUS
 }
 
 isp_connection_stop(){
@@ -26,9 +44,20 @@ isp_connection_stop(){
 }
 
 isp_connected(){
-  if grep -q 4 $CONN_STATUS; then
+  local CS=$( isp_connection_status )
+  log isp connected $CS
+  if [ "$CS" = 4 ]; then
     echo yes
   else
     echo no
   fi
 }
+
+captive_packets_count(){
+  cat $PACKETS_COUNT
+}
+
+captive_packets_set(){
+  echo $1 > $PACKETS_COUNT
+}
+

@@ -58,7 +58,7 @@ isp_tigo_promotion_add(){
 }
 
 isp_tigo_promotion_list(){
-  grep "Promotion successful" $LOG
+  grep "Promotion successful" $MSGS
 }
 
 isp_tigo_promotion_get_raw(){
@@ -178,12 +178,14 @@ isp_connection_start(){
   if ! grep -q starting $TIGO_STATUS; then
     actionlog Starting tigo-connection
     pon tigo
-    sleep 4
-    if ! ps ax | grep -q pppd; then
-      actionlog Oups - restarting connection
-      pon tigo
-    fi
-    echo $( date +%s ) > $CONNSTAT-start
+# REMOVE
+# This is probably only due to an error - should not happen (tm)
+#    sleep 4
+#    if ! ps ax | grep -q pppd; then
+#      actionlog Oups - restarting connection
+#      pon tigo
+#    fi
+    echo $( date +%s ) - start > $CONNSTAT
     echo starting > $TIGO_STATUS
   fi
 }
@@ -213,6 +215,7 @@ isp_connection_status(){
 isp_connection_stop(){
   if ! grep -q stopping $TIGO_STATUS; then
     echo stopping > $TIGO_STATUS
+    echo $( date +%s ) - stop > $CONNSTAT
     actionlog Stopping tigo-connection
     while poff -a; do sleep 2; done
   fi
