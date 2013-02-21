@@ -5,7 +5,7 @@
 # The ISP - for the moment we have Prestabist, Tigo and Simul(ation)
 ISP=simul
 
-ISP_FILE=$OLDPWD/multiconf-captive-$ISP
+ISP_FILE=$( dirname $BASH_SOURCE )/multiconf-captive-$ISP
 if [ -f $ISP_FILE ]; then
   . $ISP_FILE
 else
