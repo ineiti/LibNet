@@ -30,6 +30,21 @@ class TC_users < Test::Unit::TestCase
     assert_equal "no", $lib_net.call( :isp_connected )
   end
   
+  def test_connect_double
+    assert_equal "", $lib_net.call( :users_connected )
+
+    $lib_net.call_args( :user_connect, "1.1.1.1 foo" )
+    $lib_net.call_args( :isp_connection_status_set, 4 )
+    assert_equal "foo", $lib_net.call( :users_connected )
+    assert_equal "yes", $lib_net.call( :isp_connected )
+    
+    $lib_net.call_args( :user_connect, "1.1.1.2 foo" )
+    assert_equal "foo", $lib_net.call( :users_connected )
+    
+    $lib_net.call_args( :user_connect, "1.1.1.2 foo yes" )
+    assert_equal "foo\nfoo", $lib_net.call( :users_connected )
+  end
+  
   def test_end_promotion
     $lib_net.call_args( :user_connect, "1.1.1.1 foo" )
     $lib_net.call_args( :isp_connection_status_set, 4 )

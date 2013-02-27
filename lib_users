@@ -91,29 +91,32 @@ user_connected(){
 user_connect(){
   local IP=$1
   local NAME=$2
+  local ALLOW_DOUBLE=${3:-no}
   logf user_connect :$IP:$NAME:
 
   isp_connect
 
   if [ $( user_connected $NAME ) = "yes" ]; then
     log User $NAME already connected
-  else
-    local KEEP_PPP=""
-    if egrep -q "^$IP " $USERS_CONNECTED; then
-      KEEP_PPP="keep_$IP keep_$USER"
-      log IP $IP already connected, first adding $KEEP_PPP user
-      echo $KEEP_PPP >> $USERS_CONNECTED
-
-      log now disconnecting old user
-      user_disconnect_ip $IP
+    if [ "$ALLOW_DOUBLE" = "no" ]; then
+      return
     fi
+  fi
+  local KEEP_PPP=""
+  if egrep -q "^$IP " $USERS_CONNECTED; then
+    KEEP_PPP="keep_$IP keep_$USER"
+    log IP $IP already connected, first adding $KEEP_PPP user
+    echo $KEEP_PPP >> $USERS_CONNECTED
 
-    log Connecting user $NAME - $IP
-    echo $IP $NAME >> $USERS_CONNECTED
-    captive_ip_accept $IP
-    if [ "$KEEP_PPP" ]; then
-      user_disconnect $KEEP_PPP
-    fi
+    log now disconnecting old user
+    user_disconnect_ip $IP
+  fi
+
+  log Connecting user $NAME - $IP
+  echo $IP $NAME >> $USERS_CONNECTED
+  captive_ip_accept $IP
+  if [ "$KEEP_PPP" ]; then
+    user_disconnect $KEEP_PPP
   fi
 }
 
