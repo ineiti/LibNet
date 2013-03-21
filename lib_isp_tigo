@@ -11,12 +11,15 @@ TIGO=$PWD
 CLEFT=$RUN/tigo_credit
 PLEFT=$RUN/tigo_promotion
 UDAILY=$LOG/usage_daily
-UDAILY_TMP=$LOG/usage_daily.tmp
+UDAILY_TMP=$UDAILY.tmp
 DEV=/dev/ttyUSB2
 TIGO_STATUS=$RUN/tigo_status
 touch $TIGO_STATUS 
 for f in $CLEFT $PLEFT $UDAILY $UDAILY_TMP; do
-  echo 0 > $f
+  if [ ! -f $f ]; then
+    log Setting $f to 0
+    echo 0 > $f
+  fi
 done
 
 #
@@ -185,11 +188,14 @@ isp_connection_start(){
     pon tigo
 # REMOVE
 # This is probably only due to an error - should not happen (tm)
-#    sleep 4
-#    if ! ps ax | grep -q pppd; then
-#      actionlog Oups - restarting connection
-#      pon tigo
-#    fi
+    sleep 4
+    if ! ps ax | grep -q pppd; then
+      actionlog Oups - restarting connection
+      while poff -a; do
+        log Killing pppd
+      done 
+      pon tigo
+    fi
     echo $( date +%s ) - start > $CONNSTAT
     echo starting > $TIGO_STATUS
   fi
@@ -245,10 +251,19 @@ isp_reset_usage_daily(){
 
 isp_update_daily(){
   USAGE_NOW=$(( $( ppp_rx ) + $( ppp_tx ) ))
-  USAGE_DIFF=$(( USAGE_NOW - $( cat $UDAILY_TMP ) ))
-  echo $USAGE_NOW > $UDAILY_TMP
-  USAGE_DAILY=$(( $( cat $UDAILY ) + $USAGE_DIFF ))
-  echo $USAGE_DAILY > $UDAILY
+  if [ "$USAGE_NOW" -gt 0 ]; then
+    USAGE_DIFF=$(( USAGE_NOW - $( cat $UDAILY_TMP ) ))
+    echo $USAGE_NOW > $UDAILY_TMP
+    USAGE_DAILY=$(( $( cat $UDAILY ) + $USAGE_DIFF ))
+  #  log Usage_now_diff_daily are $USAGE_NOW - $USAGE_DIFF - $USAGE_DAILY
+    if [ "$USAGE_DAILY" ]; then
+      echo $USAGE_DAILY > $UDAILY
+    else
+      echo 0 > $UDAILY
+    fi
+  else
+    echo 0 > $UDAILY_TMP
+  fi
 }
 
 isp_update_vars(){
@@ -263,6 +278,7 @@ isp_update_vars(){
     isp_tigo_promotion_update
   fi
   PROMOTION_LEFT=$(( $( cat $PLEFT ) - $( ppp_rx ) - $( ppp_tx ) ))
+  isp_update_daily
   USAGE_DAILY=$( cat $UDAILY )
 }
 

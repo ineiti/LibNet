@@ -18,6 +18,16 @@ get_line_field(){
   grep $2 $1 | sed -e "s/ \+/ /g" | cut -d " " -f $3
 }
 
+uap_rx(){
+  BYTES=$( get_line_field /proc/net/dev uap0 3 )
+  echo ${BYTES:-0}
+}
+
+uap_tx(){
+  BYTES=$( get_line_field /proc/net/dev uap0 11 )
+  echo ${BYTES:-0}
+}
+
 ppp_rx(){
   BYTES=$( get_line_field /proc/net/dev ppp0 3 )
   echo ${BYTES:-0}
