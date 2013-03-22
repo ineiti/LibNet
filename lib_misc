@@ -10,7 +10,7 @@ mail_get_queue(){
 }
 
 mail_start_copy(){
-  $PWD/start_copy_emails
+  $WDIR/start_copy_emails
   rm /var/spool/postfix/hold/*
 }
 

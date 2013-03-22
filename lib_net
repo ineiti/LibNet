@@ -10,7 +10,7 @@
 # - lib_misc: small hacks like mail-queue and synching
 
 # Don't need to change anything below this lines...
-PWD=$( dirname $0 )
+WDIR=$( dirname ${BASH_SOURCE[0]} )
 RUN=/var/run/lib-net
 LOG=/var/log/lib-net
 DATE=$( date +%y%m%d-%H.%M )
@@ -29,16 +29,16 @@ else
       log ip $@
     }
   else
-    if [ ! -x $PWD/multiconf-captive ]; then
-      cp $PWD/multiconf-captive.orig $PWD/multiconf-captive
+    if [ ! -x $WDIR/multiconf-captive ]; then
+      cp $WDIR/multiconf-captive.orig $WDIR/multiconf-captive
     fi
-    . $PWD/multiconf-captive
+    . $WDIR/multiconf-captive
   fi
 fi
 
 if [ "$ISP" = "simul" ]; then
-  LOG=$PWD/log
-  RUN=$PWD/run
+  LOG=$WDIR/log
+  RUN=$WDIR/run
   iptables(){
     log Iptables $@
   }
@@ -85,7 +85,7 @@ actionlog(){
 #
 
 for lib in misc users captive isp; do
-  . $PWD/lib_$lib
+  . $WDIR/lib_$lib
 done
 
 #

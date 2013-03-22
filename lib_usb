@@ -16,7 +16,7 @@ ussd_decode(){
 }
 
 gcom_call(){
-  comgt -s -d $DEV $PWD/conf/$1.gcom | sed -e 's/",15//'
+  comgt -s -d $DEV $WDIR/conf/$1.gcom | sed -e 's/",15//'
 }
 
 rs(){

@@ -12,4 +12,4 @@ if pgrep -f ruby.*LibNet; then
 fi
 logger -s "Starting new LibNet"
 screen -S LibNet -d -m ./LibNet.rb
-
+./lib_net func isp_reset_usage_daily

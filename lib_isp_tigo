@@ -5,9 +5,9 @@ if [ "$LIB_TIGO" = "loaded" ]; then
 echo
 fi
 LIB_TIGO=loaded
-. $PWD/lib_usb
+. $WDIR/lib_usb
 
-TIGO=$PWD
+TIGO=$WDIR
 CLEFT=$RUN/tigo_credit
 PLEFT=$RUN/tigo_promotion
 UDAILY=$LOG/usage_daily
@@ -54,7 +54,7 @@ isp_tigo_promotion_add(){
         gammu sendsms TEXT $PROMOTION -text "kattir" 2>/dev/null
       else
         log Adding with gammu v1
-        echo kattir | gammu --config $PWD/conf/gammurc sendsms TEXT $PROMOTION 2>/dev/null
+        echo kattir | gammu --config $WDIR/conf/gammurc sendsms TEXT $PROMOTION 2>/dev/null
       fi
     fi
   fi
@@ -183,11 +183,13 @@ isp_tigo_credit_update(){
 #
 
 isp_connection_start(){
+  if [ "$( isp_connection_status )" -gt 3 ]; then
+    actionlog Connection already up
+    return
+  fi
   if ! grep -q starting $TIGO_STATUS; then
     actionlog Starting tigo-connection
     pon tigo
-# REMOVE
-# This is probably only due to an error - should not happen (tm)
     sleep 4
     if ! ps ax | grep -q pppd; then
       actionlog Oups - restarting connection
@@ -224,6 +226,10 @@ isp_connection_status(){
 }
 
 isp_connection_stop(){
+  if [ "$CONNECTION_TYPE" = "permanent" ]; then
+    actionlog Not closing connection
+    return
+  fi
   if ! grep -q stopping $TIGO_STATUS; then
     echo stopping > $TIGO_STATUS
     echo $( date +%s ) - stop > $CONNSTAT
@@ -246,7 +252,11 @@ isp_reset_usage_connection(){
 }
 
 isp_reset_usage_daily(){
-  echo 0 > $UDAILY
+  TDAY=$( date +%D )
+  if ! grep -q $TDAY $LOG/usage_reset_last; then
+    echo $TDAY > $LOG/usage_reset_last
+    echo 0 > $UDAILY
+  fi
 }
 
 isp_update_daily(){
@@ -255,7 +265,7 @@ isp_update_daily(){
     USAGE_DIFF=$(( USAGE_NOW - $( cat $UDAILY_TMP ) ))
     echo $USAGE_NOW > $UDAILY_TMP
     USAGE_DAILY=$(( $( cat $UDAILY ) + $USAGE_DIFF ))
-  #  log Usage_now_diff_daily are $USAGE_NOW - $USAGE_DIFF - $USAGE_DAILY
+    log Usage_now_diff_daily are $USAGE_NOW - $USAGE_DIFF - $USAGE_DAILY
     if [ "$USAGE_DAILY" ]; then
       echo $USAGE_DAILY > $UDAILY
     else
