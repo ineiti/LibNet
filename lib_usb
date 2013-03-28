@@ -31,6 +31,6 @@ sms_delete(){
 }
 
 grep_pppd(){
-  grep pppd /var/log/syslog | tail | grep -A 10 started
+  grep -a pppd /var/log/syslog | tail | grep -A 10 started
 }
 

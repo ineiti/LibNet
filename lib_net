@@ -19,9 +19,9 @@ if [ -x /etc/multiconf/conf.d/captive ]; then
   . /etc/multiconf/conf.d/captive
 else
   if pwd | egrep -q "/Test$"; then
-    . $( pwd )/multiconf-captive
-    RUN=$(pwd)/run
-    LOG=$(pwd)/log
+    . $WDIR/multiconf-captive
+    RUN=$WDIR/run
+    LOG=$WDIR/log
     iptables(){
       log Iptables $@
     }

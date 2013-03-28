@@ -46,6 +46,10 @@ class LibNet
   def status
     "OK"
   end
+
+  def path
+    @dir
+  end
 end
 
 if __FILE__ == $PROGRAM_NAME 

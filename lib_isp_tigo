@@ -47,6 +47,7 @@ isp_tigo_promotion_add(){
         COST=50000
         ;;
     esac
+    log Sending promotion of $PROMOTION to Tigo
     if [ "$PROMOTION" ]; then
       # Testing for new version which has a global config-file
       if [ -f /etc/gammu.conf ]; then
