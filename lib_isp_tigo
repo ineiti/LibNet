@@ -201,6 +201,7 @@ isp_connection_start(){
     fi
     echo $( date +%s ) - start > $CONNSTAT
     echo starting > $TIGO_STATUS
+    iptables -t nat -I POSTROUTING -o ppp0 -j MASQUERADE
   fi
 }
 
@@ -236,6 +237,7 @@ isp_connection_stop(){
     echo $( date +%s ) - stop > $CONNSTAT
     actionlog Stopping tigo-connection
     while poff -a; do sleep 2; done
+    iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE
   fi
   isp_tigo_promotion_update
 }
