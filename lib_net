@@ -75,7 +75,7 @@ logf(){
 #  logger -- $@
 }
 
-actionlog(){
+loga(){
   msg action $@
   echo $DATE $@ >> $ACTIONLOG
 }

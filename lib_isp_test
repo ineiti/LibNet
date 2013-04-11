@@ -22,15 +22,15 @@ init_runfile $PACKETS_COUNT 1
 
 isp_connection_start(){
   if [ "$( cat $CONN_STATUS )" -gt 0 ]; then
-    actionlog Already started the connection
+    loga Already started the connection
   else
-    actionlog Starting connection
+    loga Starting connection
     echo 0 > $CONN_STATUS
   fi
 }
 
 isp_connection_status_set(){
-  actionlog Setting status to $1
+  loga Setting status to $1
   echo $1 > $CONN_STATUS
 }
 
@@ -39,7 +39,7 @@ isp_connection_status(){
 }
 
 isp_connection_stop(){
-  actionlog Stopping connection
+  loga Stopping connection
   echo 0 > $CONN_STATUS
 }
 

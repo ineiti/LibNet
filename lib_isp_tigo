@@ -185,15 +185,15 @@ isp_tigo_credit_update(){
 
 isp_connection_start(){
   if [ "$( isp_connection_status )" -gt 3 ]; then
-    actionlog Connection already up
+    loga Connection already up
     return
   fi
   if ! grep -q starting $TIGO_STATUS; then
-    actionlog Starting tigo-connection
+    loga Starting tigo-connection
     pon tigo
     sleep 4
     if ! ps ax | grep -q pppd; then
-      actionlog Oups - restarting connection
+      loga Oups - restarting connection
       while poff -a; do
         log Killing pppd
       done 
@@ -229,13 +229,13 @@ isp_connection_status(){
 
 isp_connection_stop(){
   if [ "$CONNECTION_TYPE" = "permanent" ]; then
-    actionlog Not closing connection
+    loga Not closing connection
     return
   fi
   if ! grep -q stopping $TIGO_STATUS; then
     echo stopping > $TIGO_STATUS
     echo $( date +%s ) - stop > $CONNSTAT
-    actionlog Stopping tigo-connection
+    loga Stopping tigo-connection
     while poff -a; do sleep 2; done
     iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE
   fi

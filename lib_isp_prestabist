@@ -33,14 +33,14 @@ fi
 isp_check_double_wwan(){ 
   WWANS=$( ps ax | grep /usr/bin/wwan | wc -l ) 
   if [ $WWANS -gt 2 ]; then 
-    actionlog Restarting wwan because it has $WWANS... 
+    loga Restarting wwan because it has $WWANS... 
     ps ax 
     isp_restart_wwan 
   fi 
 }     
 
 isp_may_disconnect(){
-  actionlog Not disconnecting
+  loga Not disconnecting
 }
 
 isp_connected(){

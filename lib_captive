@@ -98,7 +98,7 @@ captive_mac_del(){
 }
 
 captive_clear(){
-  actionlog Clearing IPs and refreshing MACs
+  loga Clearing IPs and refreshing MACs
   $IPNAT -F CAPTIVE
   iptables -F FCAPTIVE
   iptables -I FCAPTIVE -j RETURN
@@ -168,12 +168,12 @@ captive_cleanup(){
       PACKETS=$( captive_packets_count $ip )
       log Checking ip $ip - has $PACKETS packets
       if [ ! "$PACKETS" ]; then
-        actionlog Still in $USERS_CONNECTED, but not in iptables
+        loga Still in $USERS_CONNECTED, but not in iptables
         users_connected_delete $ip
         remove_line "^$ip\$" $IPS_IDLE
       elif [ "$PACKETS" = 0 ]; then
         if egrep -q "^$ip\$" $IPS_IDLE; then
-          actionlog No packets, kicking $ip
+          loga No packets, kicking $ip
           user_disconnect_ip $ip
           remove_line "^$ip\$" $IPS_IDLE
         else

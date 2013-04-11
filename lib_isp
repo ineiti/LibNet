@@ -30,5 +30,18 @@ isp_params(){
     "\"has_promo\":\"$HAS_PROMO\",\"has_credit\":\"$HAS_CREDIT\"}"
 }
 
+isp_cost_get(){
+  echo "{\"cost_base\":$COST_BASE,\"cost_shared\":$COST_SHARED\)"
+}
+
+isp_cost_set(){
+  logf Setting cost $1-$2
+  if [ -f $ISP_FILE ]; then
+    loga Writing cost $1-$2
+    perl -pi -e "s/^(COST_BASE).*/\1=$1/" $ISP_FILE
+    perl -pi -e "s/^(COST_SHARED).*/\1=$2/" $ISP_FILE
+  fi
+}
+
 # Sets up and uses an ISP
 test "$ISP" && . $WDIR/lib_isp_$ISP
