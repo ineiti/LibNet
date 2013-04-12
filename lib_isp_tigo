@@ -279,6 +279,10 @@ isp_update_daily(){
   fi
 }
 
+isp_setup(){
+  isp_reset_usage_daily
+}
+
 isp_update_vars(){
   if [ ! "$CLEFT$PLEFT" ]; then
     return

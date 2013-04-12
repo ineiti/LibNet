@@ -92,8 +92,17 @@ done
 # Let's call an eventual function and print some variables
 #
 
+lib_init(){
+  captive_setup
+  isp_setup
+}
+
 if [ "$1" ]; then
   VAR=""
+  if [ $1 = init ]; then
+    lib_init
+    exit
+  fi
   if [ $1 = print ]; then
     shift
     VAR=$1

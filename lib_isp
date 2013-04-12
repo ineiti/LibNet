@@ -43,5 +43,10 @@ isp_cost_set(){
   fi
 }
 
+# Dummy function, to be replaced
+isp_setup(){
+  action Dummy setup
+}
+
 # Sets up and uses an ISP
 test "$ISP" && . $WDIR/lib_isp_$ISP
