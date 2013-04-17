@@ -36,11 +36,13 @@ isp_cost_get(){
 
 isp_cost_set(){
   logf Setting cost $1-$2
-  if [ -f $ISP_FILE ]; then
-    loga Writing cost $1-$2
-    perl -pi -e "s/^(COST_BASE).*/\1=$1/" $ISP_FILE
-    perl -pi -e "s/^(COST_SHARED).*/\1=$2/" $ISP_FILE
-  fi
+  change_var $MCAPTIVE COST_BASE $1
+  change_var $MCAPTIVE COST_SHARED $2
+}
+
+isp_free_set(){
+  logf Setting allow_free to $1
+  change_var $MCAPTIVE ALLOW_FREE $1
 }
 
 # Dummy function, to be replaced

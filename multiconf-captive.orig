@@ -8,21 +8,6 @@ ISP=simul
 ISP_FILE=$( dirname $BASH_SOURCE )/multiconf-captive-$ISP
 if [ -f $ISP_FILE ]; then
   . $ISP_FILE
-else
-  # Connection-type - permanent or ondemand
-  CONNECTION_TYPE=ondemand
-
-  # Cost per minute
-  # Base cost
-  COST_BASE=5
-  # Cost shared between users
-  COST_SHARED=10
-
-  # Is there a promotion-thing like habing 1 Go/month?
-  HAS_PROMO=false
-
-  # Does this connection have credit that we should track?
-  HAS_CREDIT=false
 fi
 
 # The table where to attache the captive - has to be linked with PREROUTING

@@ -46,6 +46,24 @@ remove_line(){
   mv "$FILE.tmp" "$FILE"
 }
 
+change_var(){
+  local FILE=$1
+  local VAR=$2
+  local VALUE=$3
+  loga "Going to add $VAR = $VALUE to $FILE"
+
+  if grep -q $VAR $FILE; then
+    perl -pi -e "s/^($VAR)=.*/\1=$VALUE/" $FILE
+  else
+    echo "$VAR=$VALUE" >> $FILE
+  fi
+}
+
+to_json(){
+  RESULT=""
+  
+}
+
 email_backup(){
   EMAIL=${1:-info@profeda.org}
   BACKUP="/tmp/backup-$DATE.tgz"

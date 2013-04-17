@@ -9,7 +9,7 @@ require 'LibNet'
 $lib_net = LibNet.new
 
 tests = %w( users )
-#tests = %w( internet )
+tests = %w( misc )
 tests.each{|t|
   require "ln_#{t}"
 }

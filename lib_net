@@ -15,13 +15,15 @@ RUN=/var/run/lib-net
 LOG=/var/log/lib-net
 DATE=$( date +%y%m%d-%H.%M )
 PATH=$PATH:/sbin:/usr/sbin
+MCAPTIVE=$WDIR/multiconf-captive
 if [ -x /etc/multiconf/conf.d/captive ]; then
   . /etc/multiconf/conf.d/captive
 else
   if pwd | egrep -q "/Test$"; then
-    . $WDIR/multiconf-captive
-    RUN=$WDIR/run
-    LOG=$WDIR/log
+    MCAPTIVE=$PWD/multiconf-captive
+    . $MCAPTIVE
+    RUN=$PWD/run
+    LOG=$PWD/log
     iptables(){
       log Iptables $@
     }
@@ -29,10 +31,10 @@ else
       log ip $@
     }
   else
-    if [ ! -x $WDIR/multiconf-captive ]; then
-      cp $WDIR/multiconf-captive.orig $WDIR/multiconf-captive
+    if [ ! -x $MCAPTIVE ]; then
+      cp $MCAPTIVE.orig $MCAPTIVE
     fi
-    . $WDIR/multiconf-captive
+    . $MCAPTIVE
   fi
 fi
 

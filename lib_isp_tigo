@@ -280,7 +280,14 @@ isp_update_daily(){
 }
 
 isp_setup(){
+  loga isp_setup
   isp_reset_usage_daily
+  isp_tigo_promotion_update
+  if [ "$PROMOTION_LEFT" = 0 ]; then
+    sleep 10
+    isp_tigo_promotion_update
+  fi
+  isp_tigo_credit_update
 }
 
 isp_update_vars(){
