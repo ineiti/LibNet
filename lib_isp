@@ -27,7 +27,7 @@ isp_disconnect(){
 
 isp_params(){
   echo "{\"isp\":\"$ISP\",\"conn_type\":\"$CONNECTION_TYPE\"," \
-    "\"has_promo\":\"$HAS_PROMO\",\"has_credit\":\"$HAS_CREDIT\"" \
+    "\"has_promo\":\"$HAS_PROMO\",\"has_credit\":\"$HAS_CREDIT\"," \
     "\"allow_free\":\"$ALLOW_FREE\"}"
 }
 
