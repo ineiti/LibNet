@@ -1,0 +1,35 @@
+#!/bin/bash
+
+BASE=/var/www/copy_lev
+LOG=$BASE.files
+HEADER=$BASE.head
+WWW=$BASE.html
+SRC=/media/dp-mount/dp-write/sync-lev
+SRC_DONE=/media/dp-mount/dp-write/sync-lev-done
+DST=linus@linusetviviane.ch:Files
+
+log(){
+  echo "$( date ) - $@<br>" >> $LOG
+  cat $HEADER > $WWW
+  tac $LOG >> $WWW
+}
+
+if [ $( ls $SRC/ | wc -l ) = "0" ]; then
+  exit
+fi
+
+log Starting to copy files $( ls $SRC ) to $DST
+
+rename "s/ /_/g" $SRC/*
+for file in $SRC/*; do
+  log Doing file $file
+  chmod a+r $file
+  while ! rsync -Paivz -e "ssh -p 502" $file $DST; do
+    log Broken, trying again
+  done
+  URL="http://linusetviviane.ch/Files/$( basename $file )"
+  log "Done $file - Link is <a href='$URL'>$URL</a>"
+  mv $file $SRC_DONE
+done
+
+log Done copying files

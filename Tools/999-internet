@@ -1,0 +1,9 @@
+<VirtualHost *:80>
+	ServerName internet.wifi
+	ServerAlias www.internet.wifi
+	ServerAlias *
+	ServerAdmin webmaster@localhost
+
+        Redirect / http://bethanie.profeda.org:3302
+
+</VirtualHost>

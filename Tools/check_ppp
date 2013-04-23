@@ -1,0 +1,47 @@
+#!/bin/bash
+. /var/www/LibNet/lib_net
+
+PATH=$PATH:/sbin:/usr/sbin
+CNT=/var/run/lib-net/check_ppp
+if [ "$CHECK_PPP" != "true" -o "$CONNECTION_TYPE" = "ondemand" ]; then
+  exit
+fi
+
+if [ -f $CNT ]; then
+  count=$( cat $CNT )
+else
+  count=0
+fi
+FAILED=""
+
+if ! grep -q ppp0 /proc/net/dev; then
+  FAILED=ppp
+elif ! grep -q tun0 /proc/net/dev; then
+  FAILED=openvpn
+elif grep -q tun1 /proc/net/dev; then
+  FAILED=openvpn_double
+  killall -9 openvpn
+  service openvpn restart
+elif ! ping -c 3 8.8.8.8 > /dev/null; then
+  FAILED=ping
+elif ! route -n | egrep "^0.0.0.0" > /dev/null; then
+  FAILED=default
+fi
+
+if [ "$FAILED" ]; then
+  echo $(( count + 1 )) > $CNT
+  logger "Internet-check failed for reason: $FAILED - counter is $count"
+  if [ "$count" -gt 5 ]; then
+    logger "Failed for 5 minutes, restarting"
+    ifdown ppp0
+    sleep 5
+    while poff -a; do sleep 1; done
+    service openvpn stop
+    killall -9 openvpn
+    ifup ppp0
+    echo 0 > $CNT
+  fi
+else
+  echo 0 > $CNT
+fi
+

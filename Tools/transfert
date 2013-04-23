@@ -1,0 +1,39 @@
+#!/bin/bash
+
+BASE=/var/www/transfert
+LOG=$BASE/files
+HEADER=$BASE/head.html
+WWW=$BASE/index.html
+SRC=/media/bethanie/Transfert/Envoie
+SRC_DONE=/media/bethanie/Transfert/Archive
+DST=bethanie@profeda.org:Transfert
+
+log(){
+  echo "$( date ) - $@<br>" >> $LOG
+  cat $HEADER > $WWW
+  tac $LOG >> $WWW
+}
+
+if [ $( ls $SRC/ | wc -l ) = "0" ]; then
+  exit
+fi
+
+log Opening connection
+/var/www/LibNet/lib_net func user_connect localhost transfert
+log Starting to copy files $( ls $SRC ) to $DST
+
+rename "s/ /_/g" $SRC/*
+for file in $SRC/*; do
+  log Doing file $file
+  chmod a+r $file
+  while ! rsync -Paivz -e "ssh -p 502" $file $DST; do
+    log Broken, trying again
+  done
+  URL="http://profeda.org/Transfert/Bethanie/$( basename $file )"
+  log "Done $file - Link is <a href='$URL'>$URL</a>"
+  mv $file $SRC_DONE
+done
+
+log Done copying files
+/var/www/LibNet/lib_net func user_disconnect localhost transfert
+log Disconnected

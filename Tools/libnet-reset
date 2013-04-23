@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/var/www/LibNet/lib_net func isp_reset_usage_connection

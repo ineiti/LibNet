@@ -1,0 +1,22 @@
+#!/bin/bash
+DIR=$( cd $( dirname $0 ); pwd )
+
+link(){
+  echo Installing $1 in $2
+  rm $2/$1
+  ln -s $DIR/$1 $2
+}
+
+#dpkg -i $DIR/gsm-ussd_0.3.3-0_all.deb 
+link libnet-reset /etc/ppp/ip-up.d
+link openvpn-up /etc/ppp/ip-up.d
+link ntpdate /etc/ppp/ip-up.d
+link tigo /etc/ppp/peers
+link openvpn-down /etc/ppp/ip-down.d
+link 500-profeda /etc/apache2/sites-enabled
+link 999-internet /etc/apache2/sites-enabled
+/etc/init.d/apache2 restart
+
+for f in check_ppp_crontab reset_usage_daily; do
+  link $f /etc/cron.d
+done
