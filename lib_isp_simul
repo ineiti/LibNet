@@ -54,4 +54,8 @@ test -f $RUN/promotion || echo 0 > $RUN/promotion
 test -f $RUN/credit|| echo 0 > $RUN/credit
 PROMOTION_LEFT=$( cat $RUN/promotion )
 CREDIT_LEFT=$( cat $RUN/credit )
-USAGE_DAILY=$( cat $LOG/usage_daily )
+if [ -f $LOG/usage_daily ]; then
+  USAGE_DAILY=$( cat $LOG/usage_daily )
+else
+  USAGE_DAILY=0
+fi
