@@ -101,31 +101,22 @@ captive_clear(){
   loga Clearing IPs and refreshing MACs
   $IPNAT -F CAPTIVE
   iptables -F FCAPTIVE
-  iptables -I FCAPTIVE -j RETURN
 
   ALLOW_DHCP=${ALLOW_DHCP:-255.255.255.255}
   INTERNAL_IPS=${INTERNAL_IPS:-$( ip addr | grep "inet " | sed -e "s/.*inet \([^\/ ]*\).*/\1/" | grep -v 127.0.0.1 )}
   echo Internal is $INTERNAL_IPS
   for ip in $ALLOW_DHCP $INTERNAL_IPS $ALLOW_DST; do
     echo Allowing requests to $ip to go through
-    $IPNAT -I NOCAPTIVE -d $ip -j ACCEPT
-    iptables -I FCAPTIVE -d $ip -j ACCEPT
-  done
-
-  for ip in $ALLOW_SRC_PROXY; do
-    echo Allowing requests from $ip to go through Proxy
-    $IPNAT -I NOCAPTIVE -s $ip -j INTERNET
-    $IPNAT -I NOCAPTIVE -d $ip -j INTERNET
-    iptables -I FCAPTIVE -s $ip -j ACCEPT
-    iptables -I FCAPTIVE -d $ip -j ACCEPT
+    $IPNAT -A NOCAPTIVE -d $ip -j ACCEPT
+    iptables -A FCAPTIVE -d $ip -j ACCEPT
   done
 
   for ip in $ALLOW_SRC_DIRECT; do
     echo Allowing requests from $ip to go through
-    $IPNAT -I NOCAPTIVE -s $ip -j ACCEPT
-    $IPNAT -I NOCAPTIVE -d $ip -j ACCEPT
-    iptables -I FCAPTIVE -s $ip -j ACCEPT
-    iptables -I FCAPTIVE -d $ip -j ACCEPT
+    $IPNAT -A NOCAPTIVE -s $ip -j ACCEPT
+    $IPNAT -A NOCAPTIVE -d $ip -j ACCEPT
+    iptables -A FCAPTIVE -s $ip -j ACCEPT
+    iptables -A FCAPTIVE -d $ip -j ACCEPT
   done
 
   FIRST_INTERNAL=$( echo $INTERNAL_IPS | sed -e "s/ .*//" )
@@ -137,6 +128,16 @@ captive_clear(){
   for mac in $( cat $MAC_LIST ); do
     captive_mac_accept $mac
   done
+
+  for ip in $ALLOW_SRC_PROXY; do
+    echo Allowing requests from $ip to go through Proxy
+    $IPNAT -A NOCAPTIVE -s $ip -j INTERNET
+    $IPNAT -A NOCAPTIVE -d $ip -j INTERNET
+    iptables -A FCAPTIVE -s $ip -j ACCEPT
+    iptables -A FCAPTIVE -d $ip -j ACCEPT
+  done
+
+  iptables -A FCAPTIVE -j RETURN
 }
 
 captive_accept_all(){
@@ -226,7 +227,7 @@ captive_setup(){
   $IPNAT -A INTERNET -j ACCEPT
 
   delete_chain FORWARD FCAPTIVE
-  iptables -I FCAPTIVE -j RETURN
+  #iptables -I FCAPTIVE -j RETURN
   iptables -P FORWARD DROP
 
   captive_clear
