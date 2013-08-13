@@ -16,26 +16,22 @@ LOG=/var/log/lib-net
 DATE=$( date +%y%m%d-%H.%M )
 PATH=$PATH:/sbin:/usr/sbin
 MCAPTIVE=$WDIR/multiconf-captive
-if [ -x /etc/multiconf/conf.d/captive ]; then
-  . /etc/multiconf/conf.d/captive
+if pwd | egrep -q "/Test$"; then
+  MCAPTIVE=$PWD/multiconf-captive
+  . $MCAPTIVE
+  RUN=$PWD/run
+  LOG=$PWD/log
+  iptables(){
+    log Iptables $@
+  }
+  ip(){
+    log ip $@
+  }
 else
-  if pwd | egrep -q "/Test$"; then
-    MCAPTIVE=$PWD/multiconf-captive
-    . $MCAPTIVE
-    RUN=$PWD/run
-    LOG=$PWD/log
-    iptables(){
-      log Iptables $@
-    }
-    ip(){
-      log ip $@
-    }
-  else
-    if [ ! -x $MCAPTIVE ]; then
-      cp $MCAPTIVE.orig $MCAPTIVE
-    fi
-    . $MCAPTIVE
+  if [ ! -x $MCAPTIVE ]; then
+    cp $MCAPTIVE.orig $MCAPTIVE
   fi
+  . $MCAPTIVE
 fi
 
 if [ "$ISP" = "simul" ]; then
@@ -48,61 +44,30 @@ if [ "$ISP" = "simul" ]; then
     log ip $@
   }
 fi
-CONNSTAT=$RUN/connection
-MSGS=$LOG/msgs.log
-ACTIONLOG=$LOG/action.log
+CMDS=$RUN/cmd
+ENV=$RUN/env
+RUN_PID=$RUN/pid
 
-mkdir -p $RUN $LOG
-if [ "$ISP" != "simul" -a "$ISP" != "test" ]; then
-  sudo chown -R www-data.www-data $RUN $LOG
+test -p $CMDS || mkfifo $CMDS
+
+if [ -f $RUN_PID ]; then
+  if ! ps ax | grep -q "^ *$( cat $RUN_PID )"; then
+    echo Process is not running anymore - restarting
+    . $WDIR/lib_queue &
+    echo $! > $RUN_PID
+  fi
 fi
 
-#
-# Different kind of logging facilities
-#
-
-msg() {
-  WHO=$1
-  shift
-  echo $( date +%F_%R ) - $WHO: $@ >> $MSGS
-}
-
-log(){
-  msg simple "$@"
-#  logger -- $@
-}
-
-logf(){
-  msg function "$@"
-#  logger -- $@
-}
-
-loga(){
-  msg action $@
-  echo $DATE $@ >> $ACTIONLOG
-}
-
-#
-# Loading of other libraries
-#
-
-for lib in misc users captive isp; do
-  . $WDIR/lib_$lib
-done
-
-#
-# Let's call an eventual function and print some variables
-#
-
-lib_init(){
-  captive_setup
-  isp_setup
-}
+if [ ! -f $RUN_PID ]; then
+  echo Process is not running - starting
+  . $WDIR/lib_queue &
+  echo $! > $RUN_PID
+fi
 
 if [ "$1" ]; then
   VAR=""
   if [ $1 = init ]; then
-    lib_init
+    echo lib_init > $CMDS
     exit
   fi
   if [ $1 = print ]; then
@@ -110,14 +75,27 @@ if [ "$1" ]; then
     VAR=$1
     shift
   fi
-  if [ "$1" = func ]; then
+  case "$1" in
+  func|async)
+    cmd=$1
     shift
     FUNC=$1
     shift
-    $FUNC $@
-  fi
+    echo $cmd $FUNC $@ > $CMDS
+    if [ $cmd = "func" ]; then
+      cat $CMDS
+    fi
+    ;;
+  restart|sleep)
+    echo $@ > $CMDS
+    ;;
+  count)
+    echo $@ > $CMDS
+    cat $CMDS
+    ;;
+  esac
   if [ "$VAR" ]; then
     # There must be a better way to do that...
-    set | grep "^$VAR=" | sed -e "s/.*=//"
+    grep "^$VAR=" $ENV | sed -e "s/.*=//"
   fi
 fi

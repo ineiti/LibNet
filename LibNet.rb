@@ -25,17 +25,14 @@ class LibNet
     %x[ #{@dir}/lib_net func captive_setup ]
   end
 	
-  def call( func, reply = nil )
-    dputs(3){ "Called with #{func} - #{reply}" }
-    s = ""
-    if reply
-      s = "print #{reply}"
-    end
-    if func
-      s += " func #{func}"
-    end
-    dputs(4){ "Going to call #{s}" }
-    return %x[ #{@dir}/lib_net #{s} ].chomp
+  def call( func )
+    dputs(3){ "Called with #{func}" }
+    return %x[ #{@dir}/lib_net func #{func} ].chomp
+  end
+  
+  def print( var )
+    dputs(3){ "Printing #{var}" }    
+    return %x[ #{@dir}/lib_net print #{var} ].chomp
   end
 
   def call_args( func, argstr )

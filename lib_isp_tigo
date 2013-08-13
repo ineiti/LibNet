@@ -74,6 +74,7 @@ isp_tigo_promotion_get_raw(){
   # This should also work.. - simple test-cases
   #STR="30.000 MB INTERNET valide avant 04/10/2012."
   #STR=" 30.000 MB INTERNET valide avant 04/10/2012."
+  #STR="3434.687 MB INTERNET valide 22/05/2013."
   #STR="250.00 CFA recharge bonus, 30.000 MB INTERNET valide avant 04/10/2012."
   #STR="250.00 CFA recharge bonus."
   STR=$( ussd_decode $( gcom_call get_promotion ) )
