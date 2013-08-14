@@ -4,6 +4,6 @@
 	ServerAlias *
 	ServerAdmin webmaster@localhost
 
-        Redirect / http://bethanie.profeda.org:3302
+        Redirect / http://melfi.profeda.org:3302
 
 </VirtualHost>

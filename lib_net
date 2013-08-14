@@ -55,6 +55,7 @@ if [ -f $RUN_PID ]; then
     echo Process is not running anymore - restarting
     . $WDIR/lib_queue &
     echo $! > $RUN_PID
+    cat $CMDS >> $LOG/start
   fi
 fi
 

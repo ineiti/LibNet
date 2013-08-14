@@ -23,20 +23,27 @@ class LibNet
   def initialize
     @dir = File.dirname( __FILE__ )
     %x[ #{@dir}/lib_net func captive_setup ]
+    @env = print( :ENV )
+    ddputs(3){"Env is at #{@env}"}
   end
 	
   def call( func )
-    dputs(3){ "Called with #{func}" }
+    ddputs(3){ "Called with #{func}" }
     return %x[ #{@dir}/lib_net func #{func} ].chomp
   end
   
   def print( var )
-    dputs(3){ "Printing #{var}" }    
-    return %x[ #{@dir}/lib_net print #{var} ].chomp
+    ddputs(3){ "Printing #{var}" }    
+    #return %x[ #{@dir}/lib_net print #{var} ].chomp
+    IO.foreach(@env){|l|
+      if l =~ /^#{var}=(.*)/
+        return $1
+      end
+    }
   end
 
   def call_args( func, argstr )
-    dputs(4){ "Going to call_args #{func} - #{argstr}" }
+    ddputs(4){ "Going to call_args #{func} - #{argstr}" }
     return %x[ #{@dir}/lib_net func #{func} #{argstr} ].chomp
   end
 	

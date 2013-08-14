@@ -191,15 +191,7 @@ isp_connection_start(){
   fi
   if ! grep -q starting $TIGO_STATUS; then
     loga Starting tigo-connection
-    pon tigo
-    sleep 4
-    if ! ps ax | grep -q pppd; then
-      loga Oups - restarting connection
-      while poff -a; do
-        log Killing pppd
-      done 
-      pon tigo
-    fi
+    nohup $WDIR/bin/ppp_loop tigo > /dev/null 2>&1 &
     echo $( date +%s ) - start > $CONNSTAT
     echo starting > $TIGO_STATUS
     iptables -t nat -I POSTROUTING -o ppp0 -j MASQUERADE
@@ -207,12 +199,6 @@ isp_connection_start(){
 }
 
 isp_connection_status(){
-  if grep_pppd | grep -q failed; then
-    isp_connection_stop
-    isp_connection_start
-    echo 0
-    return
-  fi
   PPP=$( ip link | grep " ppp" | sed -e "s/.*\(ppp.\).*/\1/" )
   PAP=$( grep_pppd | grep PAP )
   PPP_IP=$( grep_pppd grep -A 3 PAP | grep local | sed -e "s/.* //" )
@@ -237,7 +223,7 @@ isp_connection_stop(){
     echo stopping > $TIGO_STATUS
     echo $( date +%s ) - stop > $CONNSTAT
     loga Stopping tigo-connection
-    while poff -a; do sleep 2; done
+    echo stop > $RUN/ppp_loop
     iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE
   fi
   isp_tigo_promotion_update
