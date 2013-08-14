@@ -161,15 +161,15 @@ isp_tigo_credit_get(){
 }
 
 isp_tigo_get_cell(){
-  STR=$( gcom_call get_cell )
-  log "Got cell $STR"
-  echo $STR
+  ISP_TIGO_CELL=$( gcom_call get_cell | sed -e "s/[^a-f0-9,]//g" )
+  log "Got cell $ISP_TIGO_CELL"
+  echo $ISP_TIGO_CELL
 }
 
 isp_tigo_get_signal(){
-  STR=$( gcom_call get_signal )
-  log "Got signal $STR"
-  echo $STR
+  ISP_TIGO_SIGNAL=$( gcom_call get_signal )
+  log "Got signal $ISP_TIGO_SIGNAL"
+  echo $ISP_TIGO_SIGNAL
 }
 
 isp_tigo_credit_update(){
@@ -278,19 +278,22 @@ isp_setup(){
 }
 
 isp_update_vars(){
+  log in function
   if [ ! "$CLEFT$PLEFT" ]; then
     return
   fi
-  if [ ! -f $CLEFT ]; then
+  if [ ! -f $CLEFT -o "$1" ]; then
     isp_tigo_credit_update
   fi
   CREDIT_LEFT=$( cat $CLEFT )
-  if [ ! -f $PLEFT ]; then
+  if [ ! -f $PLEFT -o "$1" ]; then
     isp_tigo_promotion_update
   fi
   PROMOTION_LEFT=$(( $( cat $PLEFT ) - $( ppp_rx ) - $( ppp_tx ) ))
   isp_update_daily
   USAGE_DAILY=$( cat $UDAILY )
+  isp_tigo_get_cell
+  isp_tigo_get_signal
 }
 
-isp_update_vars
+#isp_update_vars all

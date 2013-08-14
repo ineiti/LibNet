@@ -16,17 +16,13 @@ LOG=/var/log/lib-net
 DATE=$( date +%y%m%d-%H.%M )
 PATH=$PATH:/sbin:/usr/sbin
 MCAPTIVE=$WDIR/multiconf-captive
+FAKE_IP=false
 if pwd | egrep -q "/Test$"; then
   MCAPTIVE=$PWD/multiconf-captive
   . $MCAPTIVE
   RUN=$PWD/run
   LOG=$PWD/log
-  iptables(){
-    log Iptables $@
-  }
-  ip(){
-    log ip $@
-  }
+  FAKE_IP=true
 else
   if [ ! -x $MCAPTIVE ]; then
     cp $MCAPTIVE.orig $MCAPTIVE
@@ -37,32 +33,37 @@ fi
 if [ "$ISP" = "simul" ]; then
   LOG=$WDIR/log
   RUN=$WDIR/run
-  iptables(){
-    log Iptables $@
-  }
-  ip(){
-    log ip $@
-  }
+  FAKE_IP=true
 fi
 CMDS=$RUN/cmd
+REPLY=$RUN/reply
 ENV=$RUN/env
 RUN_PID=$RUN/pid
 
-test -p $CMDS || mkfifo $CMDS
+for f in $CMDS $REPLY; do
+  test -p $f || mkfifo $f
+done
+
+start_queue(){
+  export WDIR RUN LOG DATE PATH MCAPTIVE FAKE_IP CMDS REPLY ENV RUN_PID
+  bash $WDIR/lib_queue &
+  echo $! > $RUN_PID
+  disown -a
+  cat $REPLY >> $LOG/start
+  echo ping > $CMDS
+  cat $REPLY >> $LOG/start
+}
 
 if [ -f $RUN_PID ]; then
   if ! ps ax | grep -q "^ *$( cat $RUN_PID )"; then
     echo Process is not running anymore - restarting
-    . $WDIR/lib_queue &
-    echo $! > $RUN_PID
-    cat $CMDS >> $LOG/start
+    start_queue
   fi
 fi
 
 if [ ! -f $RUN_PID ]; then
   echo Process is not running - starting
-  . $WDIR/lib_queue &
-  echo $! > $RUN_PID
+  start_queue
 fi
 
 if [ "$1" ]; then
@@ -84,15 +85,20 @@ if [ "$1" ]; then
     shift
     echo $cmd $FUNC $@ > $CMDS
     if [ $cmd = "func" ]; then
-      cat $CMDS
+      cat $REPLY
     fi
     ;;
-  restart|sleep)
+  sleep|restart)
+    echo doing $@
     echo $@ > $CMDS
     ;;
-  count)
+  count|ping)
+    echo doing $@
     echo $@ > $CMDS
-    cat $CMDS
+    cat $REPLY
+    ;;
+  kill)
+    kill -9 $( cat $RUN_PID )
     ;;
   esac
   if [ "$VAR" ]; then

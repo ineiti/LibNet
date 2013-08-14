@@ -1,5 +1,8 @@
 #!/bin/bash
-. /var/www/LibNet/lib_net
+WDIR=$( dirname ${BASH_SOURCE[0]} )
+$WDIR/../lib_net func isp_update_vars
+CHECK_PPP=$( $WDIR/../lib_net print CHECK_PPP )
+CONNECTION_TYPE=$( $WDIR/../lib_net print CONNECTION_TYPE )
 
 PATH=$PATH:/sbin:/usr/sbin
 CNT=/var/run/lib-net/check_ppp

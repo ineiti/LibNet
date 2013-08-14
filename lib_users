@@ -179,3 +179,5 @@ user_cost_now(){
   echo $COST
 }
 
+USER_COST_MAX=$( user_cost_max )
+
