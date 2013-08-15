@@ -19,38 +19,46 @@ if not respond_to? :dputs
   end
 end
 
+SIMUL = true
+
 class LibNet
   def initialize
     @dir = File.dirname( __FILE__ )
     # As lib_net will leave a child around, we have to fork it and
     # hope it's done in 1 second
-    Process.detach( Process.fork { 
-      %x[ #{@dir}/lib_net kill ]
-      %x[ #{@dir}/lib_net ] 
-    } )
-    sleep 1
-    %x[ #{@dir}/lib_net func captive_setup ]
-    @env = call_print( :ENV )
+    if not SIMUL
+      Process.detach( Process.fork { 
+        %x[ #{@dir}/lib_net kill ]
+        %x[ #{@dir}/lib_net ] 
+      } )
+      sleep 1
+      %x[ #{@dir}/lib_net func captive_setup ]
+      @env = call_print( :ENV )
+    end
     ddputs(3){"Env is at #{@env}"}
   end
 	
   def call( func, *args )
     dputs(3){ "Called with #{func} - #{args.inspect}" }
+    SIMUL and return ""
     return %x[ #{@dir}/lib_net func #{func} #{args.join( ' ' )} ].chomp
   end
 
   def async( func, *args )
     ddputs(3){ "Async with #{func} - #{args.inspect}" }
+    SIMUL and return ""
     return %x[ #{@dir}/lib_net async #{func} #{args.join( ' ' )} ].chomp
   end
   
   def call_print( var )
     dputs(2){ "Printing #{var} through lib_net" }    
+    SIMUL and return ""
     return %x[ #{@dir}/lib_net print #{var} ].chomp
   end
 
   def print( var )
     dputs(4){ "Printing #{var}" }    
+    SIMUL and return ""
     IO.foreach(@env){|l|
       if l =~ /^#{var}=(.*)/
         return $1
@@ -73,12 +81,14 @@ class LibNet
   end
 
   def isp_params
+    SIMUL and return {}
     Hash[ %w( ISP CONNECTION_TYPE HAS_PROMO HAS_CREDIT ALLOW_FREE ).collect{|v|
       [ v, print( v ) ]
     } ]
   end
 
   def get_var_file( var )
+    SIMUL and return []
     if file = print( var )
       return IO.readlines( file )
     end

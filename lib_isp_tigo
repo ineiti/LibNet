@@ -14,6 +14,7 @@ UDAILY=$LOG/usage_daily
 UDAILY_TMP=$UDAILY.tmp
 DEV=/dev/ttyUSB2
 TIGO_STATUS=$RUN/tigo_status
+PROMOTION_CORR=0
 touch $TIGO_STATUS 
 for f in $CLEFT $PLEFT $UDAILY $UDAILY_TMP; do
   if [ ! -f $f ]; then
@@ -130,6 +131,7 @@ isp_tigo_promotion_update(){
   P=$( isp_tigo_promotion_get )
   if [ "$P" ]; then
     echo $P > $PLEFT
+    PROMOTION_CORR=$(( $( ppp_tx ) + $( ppp_rx ) ))
   fi
   isp_update_vars
 }
@@ -289,11 +291,11 @@ isp_update_vars(){
   if [ ! -f $PLEFT -o "$1" ]; then
     isp_tigo_promotion_update
   fi
-  PROMOTION_LEFT=$(( $( cat $PLEFT ) - $( ppp_rx ) - $( ppp_tx ) ))
+  PROMOTION_LEFT=$(( $( cat $PLEFT ) - $( ppp_rx ) - $( ppp_tx ) + $PROMOTION_CORR ))
   isp_update_daily
   USAGE_DAILY=$( cat $UDAILY )
   isp_tigo_get_cell
   isp_tigo_get_signal
 }
 
-#isp_update_vars all
+isp_update_vars all
