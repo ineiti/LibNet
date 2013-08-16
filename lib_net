@@ -40,18 +40,44 @@ REPLY=$RUN/reply
 ENV=$RUN/env
 RUN_PID=$RUN/pid
 
-for f in $CMDS $REPLY; do
-  test -p $f || mkfifo $f
-done
+msg_snd_cmd(){
+  $WDIR/Tools/msgtool s 2 "$@"
+}
+
+msg_rcv_cmd(){
+  $WDIR/Tools/msgtool r 2
+}
+
+msg_snd_rpl(){
+  $WDIR/Tools/msgtool s 3 "$@"
+}
+
+msg_rcv_rpl(){
+  $WDIR/Tools/msgtool r 3
+}
+
+msg_del(){
+  $WDIR/Tools/msgtool d $1
+}
+
+#for f in $CMDS $REPLY; do
+#  test -p $f || mkfifo $f
+#done
 
 start_queue(){
+  msg_del 2 > /dev/null
+  msg_del 3 > /dev/null
   export WDIR RUN LOG DATE PATH MCAPTIVE FAKE_IP CMDS REPLY ENV RUN_PID
+  export -f msg_snd_cmd msg_rcv_cmd msg_snd_rpl msg_rcv_rpl
   bash $WDIR/lib_queue &
   echo $! > $RUN_PID
   disown -a
-  cat $REPLY >> $LOG/start
-  echo ping > $CMDS
-  cat $REPLY >> $LOG/start
+  msg_rcv_rpl >> $LOG/start
+  msg_snd_cmd ping
+  msg_rcv_rpl >> $LOG/start
+  #cat $REPLY >> $LOG/start
+  #echo ping > $CMDS
+  #cat $REPLY >> $LOG/start
 }
 
 if [ -f $RUN_PID ]; then
@@ -69,7 +95,8 @@ fi
 if [ "$1" ]; then
   VAR=""
   if [ $1 = init ]; then
-    echo lib_init > $CMDS
+    msg_snd_cmd lib_init
+    #echo lib_init > $CMDS
     exit
   fi
   if [ $1 = print ]; then
@@ -83,19 +110,24 @@ if [ "$1" ]; then
     shift
     FUNC=$1
     shift
-    echo $cmd $FUNC $@ > $CMDS
+    msg_snd_cmd $cmd $FUNC $@
+    #echo $cmd $FUNC $@ > $CMDS
     if [ $cmd = "func" ]; then
-      cat $REPLY
+      #cat $REPLY
+      msg_rcv_rpl
     fi
     ;;
   sleep|restart)
     echo doing $@
-    echo $@ > $CMDS
+    msg_snd_cmd $@
+    #echo $@ > $CMDS
     ;;
   count|ping)
     echo doing $@
-    echo $@ > $CMDS
-    cat $REPLY
+    msg_snd_cmd $@
+    msg_rcv_rpl
+    #echo $@ > $CMDS
+    #cat $REPLY
     ;;
   kill)
     kill -9 $( cat $RUN_PID )

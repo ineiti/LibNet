@@ -5,6 +5,8 @@
 
 require 'drb'
 
+SIMUL=true
+
 if not respond_to? :dputs
   DEBUG_LVL=3
   
@@ -19,8 +21,6 @@ if not respond_to? :dputs
   end
 end
 
-SIMUL = true
-
 class LibNet
   def initialize
     @dir = File.dirname( __FILE__ )
@@ -28,14 +28,21 @@ class LibNet
     # hope it's done in 1 second
     if not SIMUL
       Process.detach( Process.fork { 
+        ddputs(3){"killing"}
         %x[ #{@dir}/lib_net kill ]
-        %x[ #{@dir}/lib_net ] 
+        ddputs(3){"init"}
+        %x[ #{@dir}/lib_net ping ]
+        ddputs(3){"finished"}
       } )
+      exit
       sleep 1
+      ddputs(3){"setting up"}
       %x[ #{@dir}/lib_net func captive_setup ]
       @env = call_print( :ENV )
+      ddputs(3){"Env is at #{@env}"}
+    else
+      dputs(1){"Simulation only"}
     end
-    ddputs(3){"Env is at #{@env}"}
   end
 	
   def call( func, *args )

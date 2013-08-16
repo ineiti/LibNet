@@ -193,7 +193,7 @@ isp_connection_start(){
   fi
   if ! grep -q starting $TIGO_STATUS; then
     loga Starting tigo-connection
-    nohup $WDIR/bin/ppp_loop tigo > /dev/null 2>&1 &
+    nohup $WDIR/Tools/ppp_loop tigo > /dev/null 2>&1 &
     echo $( date +%s ) - start > $CONNSTAT
     echo starting > $TIGO_STATUS
     iptables -t nat -I POSTROUTING -o ppp0 -j MASQUERADE
@@ -285,17 +285,17 @@ isp_update_vars(){
     return
   fi
   if [ ! -f $CLEFT -o "$1" ]; then
-    isp_tigo_credit_update
+    isp_tigo_credit_update > /dev/null
   fi
   CREDIT_LEFT=$( cat $CLEFT )
   if [ ! -f $PLEFT -o "$1" ]; then
-    isp_tigo_promotion_update
+    isp_tigo_promotion_update > /dev/null
   fi
   PROMOTION_LEFT=$(( $( cat $PLEFT ) - $( ppp_rx ) - $( ppp_tx ) + $PROMOTION_CORR ))
-  isp_update_daily
+  isp_update_daily > /dev/null
   USAGE_DAILY=$( cat $UDAILY )
-  isp_tigo_get_cell
-  isp_tigo_get_signal
+  isp_tigo_get_cell > /dev/null
+  isp_tigo_get_signal > /dev/null
 }
 
-isp_update_vars all
+#isp_update_vars all
