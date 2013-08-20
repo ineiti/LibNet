@@ -37,11 +37,8 @@ if [ "$FAILED" ]; then
   if [ "$count" -gt 5 ]; then
     logger "Failed for 5 minutes, restarting"
     ifdown ppp0
-    sleep 5
-    while poff -a; do sleep 1; done
     service openvpn stop
     killall -9 openvpn
-    ifup ppp0
     echo 0 > $CNT
   fi
 else

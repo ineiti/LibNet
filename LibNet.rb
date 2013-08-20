@@ -5,8 +5,6 @@
 
 require 'drb'
 
-SIMUL=true
-
 if not respond_to? :dputs
   DEBUG_LVL=3
   
@@ -22,11 +20,12 @@ if not respond_to? :dputs
 end
 
 class LibNet
-  def initialize
+  def initialize( simul = false )
     @dir = File.dirname( __FILE__ )
+    @simul = simul
     # As lib_net will leave a child around, we have to fork it and
     # hope it's done in 1 second
-    if not SIMUL
+    if not @simul
       Process.detach( Process.fork { 
           dputs(3){"killing"}
           %x[ #{@dir}/lib_net kill ]
@@ -46,25 +45,25 @@ class LibNet
 	
   def call( func, *args )
     dputs(3){ "Called with #{func} - #{args.inspect}" }
-    SIMUL and return ""
+    @simul and return ""
     return %x[ #{@dir}/lib_net func #{func} #{args.join( ' ' )} ].chomp
   end
 
   def async( func, *args )
     dputs(3){ "Async with #{func} - #{args.inspect}" }
-    SIMUL and return ""
+    @simul and return ""
     return %x[ #{@dir}/lib_net async #{func} #{args.join( ' ' )} ].chomp
   end
   
   def call_print( var )
     dputs(2){ "Printing #{var} through lib_net" }    
-    SIMUL and return ""
+    @simul and return ""
     return %x[ #{@dir}/lib_net print #{var} ].chomp
   end
 
   def print( var )
     dputs(4){ "Printing #{var}" }    
-    SIMUL and return ""
+    @simul and return ""
     IO.foreach(@env){|l|
       if l =~ /^#{var}=(.*)/
         return $1
@@ -87,14 +86,14 @@ class LibNet
   end
 
   def isp_params
-    SIMUL and return {}
+    @simul and return {}
     Hash[ %w( ISP CONNECTION_TYPE HAS_PROMO HAS_CREDIT ALLOW_FREE ).collect{|v|
         [ v.downcase, print( v ) ]
       } ]
   end
 
   def get_var_file( var )
-    SIMUL and return []
+    @simul and return []
     if ( file = print( var ) ) and File.exists?( file )
       return IO.readlines( file )
     end

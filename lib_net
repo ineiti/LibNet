@@ -125,16 +125,19 @@ start_queue(){
   #cat $REPLY >> $LOG/start
 }
 
-if [ -f $RUN_PID ]; then
-  if ! ps ax | grep -q "^ *$( cat $RUN_PID )"; then
-    log Process is not running anymore - restarting
+
+if [ "$1" != "kill" ]; then
+  if [ -f $RUN_PID ]; then
+    if ! ps ax | grep -q "^ *$( cat $RUN_PID )"; then
+      log Process is not running anymore - restarting
+      start_queue
+    fi
+  fi
+
+  if [ ! -f $RUN_PID ]; then
+    log Process is not running - starting
     start_queue
   fi
-fi
-
-if [ ! -f $RUN_PID ]; then
-  log Process is not running - starting
-  start_queue
 fi
 
 if [ "$1" ]; then
@@ -176,8 +179,10 @@ if [ "$1" ]; then
     ;;
   kill)
     log Killing process
-    kill -9 $( cat $RUN_PID )
-    rm $RUN_PID
+    if [ -f $RUN_PID ]; then
+      kill -9 $( cat $RUN_PID )
+      rm $RUN_PID
+    fi
     msg_delete
     ;;
   esac
