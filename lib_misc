@@ -57,6 +57,7 @@ change_var(){
   else
     echo "$VAR=$VALUE" >> $FILE
   fi
+  . ./$FILE
 }
 
 to_json(){

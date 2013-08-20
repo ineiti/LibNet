@@ -104,15 +104,15 @@ captive_clear(){
 
   ALLOW_DHCP=${ALLOW_DHCP:-255.255.255.255}
   INTERNAL_IPS=${INTERNAL_IPS:-$( ip addr | grep "inet " | sed -e "s/.*inet \([^\/ ]*\).*/\1/" | grep -v 127.0.0.1 )}
-  echo Internal is $INTERNAL_IPS
+  log Internal is $INTERNAL_IPS
   for ip in $ALLOW_DHCP $INTERNAL_IPS $ALLOW_DST; do
-    echo Allowing requests to $ip to go through
+    log Allowing requests to $ip to go through
     $IPNAT -A NOCAPTIVE -d $ip -j ACCEPT
     iptables -A FCAPTIVE -d $ip -j ACCEPT
   done
 
   for ip in $ALLOW_SRC_DIRECT; do
-    echo Allowing requests from $ip to go through
+    log Allowing requests from $ip to go through
     $IPNAT -A NOCAPTIVE -s $ip -j ACCEPT
     $IPNAT -A NOCAPTIVE -d $ip -j ACCEPT
     iptables -A FCAPTIVE -s $ip -j ACCEPT
@@ -130,7 +130,7 @@ captive_clear(){
   done
 
   for ip in $ALLOW_SRC_PROXY; do
-    echo Allowing requests from $ip to go through Proxy
+    log Allowing requests from $ip to go through Proxy
     $IPNAT -A NOCAPTIVE -s $ip -j INTERNET
     $IPNAT -A NOCAPTIVE -d $ip -j INTERNET
     iptables -A FCAPTIVE -s $ip -j ACCEPT
@@ -214,7 +214,7 @@ delete_chain(){
 }
 
 captive_setup(){
-  echo Setting up
+  log Setting up
   PREROUTING=${PREROUTING:-PREROUTING}
   delete_chain $PREROUTING CAPTIVE nat
 

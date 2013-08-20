@@ -11,6 +11,7 @@ link(){
 link libnet-reset /etc/ppp/ip-up.d
 link openvpn-up /etc/ppp/ip-up.d
 link ntpdate /etc/ppp/ip-up.d
+link 8led /etc/ppp/ip-up.d
 link tigo /etc/ppp/peers
 link openvpn-down /etc/ppp/ip-down.d
 link 500-profeda /etc/apache2/sites-enabled

@@ -1,6 +1,1 @@
-multiconf-captive*
-.hg*
-log
-run
-Test/log
-Test/run
+Tools/msgtool

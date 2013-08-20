@@ -39,9 +39,55 @@ CMDS=$RUN/cmd
 REPLY=$RUN/reply
 ENV=$RUN/env
 RUN_PID=$RUN/pid
+CONNSTAT=$RUN/connection
+MSGS=$LOG/msgs.log
+ACTIONLOG=$LOG/action.log
+
+#
+# Different kind of logging facilities
+#
+
+msg() {
+  WHO=$1
+  shift
+  echo $( date +%F_%R ) - $WHO: $@ >> $MSGS
+}
+
+log(){
+  msg simple "$@"
+#  logger -- $@
+}
+
+logf(){
+  msg function "$@"
+#  logger -- $@
+}
+
+loga(){
+  msg action $@
+  echo $DATE $@ >> $ACTIONLOG
+}
+
+#
+# msg-setup
+#
+
+msg_delete(){
+  log deleting msg-queues
+  $WDIR/Tools/msgtool d 2
+  $WDIR/Tools/msgtool d 3
+  $WDIR/Tools/msgtool d
+  log $( ipcs )
+}
+
+msg_setup(){
+  msg_delete
+  log Setting up
+}
 
 msg_snd_cmd(){
-  $WDIR/Tools/msgtool s 2 "$@"
+  log sending command $@
+  $WDIR/Tools/msgtool s 2 "$*"
 }
 
 msg_rcv_cmd(){
@@ -49,15 +95,14 @@ msg_rcv_cmd(){
 }
 
 msg_snd_rpl(){
-  $WDIR/Tools/msgtool s 3 "$@"
+  log sending reply $@
+  $WDIR/Tools/msgtool s 3 "$*"
 }
 
 msg_rcv_rpl(){
-  $WDIR/Tools/msgtool r 3
-}
-
-msg_del(){
-  $WDIR/Tools/msgtool d $1
+  REPLY=$( $WDIR/Tools/msgtool r 3 )
+  log Reply is $REPLY
+  echo $REPLY
 }
 
 #for f in $CMDS $REPLY; do
@@ -65,10 +110,10 @@ msg_del(){
 #done
 
 start_queue(){
-  msg_del 2 > /dev/null
-  msg_del 3 > /dev/null
-  export WDIR RUN LOG DATE PATH MCAPTIVE FAKE_IP CMDS REPLY ENV RUN_PID
-  export -f msg_snd_cmd msg_rcv_cmd msg_snd_rpl msg_rcv_rpl
+  log Starting queue
+  msg_setup
+  export WDIR RUN LOG DATE PATH MCAPTIVE FAKE_IP CMDS REPLY ENV RUN_PID CONNSTAT MSGS ACTIONLOG
+  export -f msg_snd_cmd msg_rcv_cmd msg_snd_rpl msg_rcv_rpl msg log loga logf
   bash $WDIR/lib_queue &
   echo $! > $RUN_PID
   disown -a
@@ -82,13 +127,13 @@ start_queue(){
 
 if [ -f $RUN_PID ]; then
   if ! ps ax | grep -q "^ *$( cat $RUN_PID )"; then
-    echo Process is not running anymore - restarting
+    log Process is not running anymore - restarting
     start_queue
   fi
 fi
 
 if [ ! -f $RUN_PID ]; then
-  echo Process is not running - starting
+  log Process is not running - starting
   start_queue
 fi
 
@@ -130,7 +175,10 @@ if [ "$1" ]; then
     #cat $REPLY
     ;;
   kill)
+    log Killing process
     kill -9 $( cat $RUN_PID )
+    rm $RUN_PID
+    msg_delete
     ;;
   esac
   if [ "$VAR" ]; then

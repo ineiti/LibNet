@@ -280,7 +280,7 @@ isp_setup(){
 }
 
 isp_update_vars(){
-  log in function
+  log in function update_vars
   if [ ! "$CLEFT$PLEFT" ]; then
     return
   fi
@@ -298,4 +298,4 @@ isp_update_vars(){
   isp_tigo_get_signal > /dev/null
 }
 
-#isp_update_vars all
+isp_update_vars all
