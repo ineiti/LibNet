@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# This is the central piece of LibNet which loads all libraries and reads
+# the command queue
+
+# This is a network-library that does
+# - lib_captive: create and administer a captive portal
+# - lib_isp: interact with ISPs - we want to have
+#   - lib_isp_tigo: Tigo USB-key
+#   - lib_isp_prestabist: Prestabist modem
+#   - lib_isp_tawali: Tawali USB-key
+#   - lib_isp_airtel: Airtel USB-key
+# - lib_misc: small hacks like mail-queue and synching
+
+# Don't need to change anything below this lines...
+
+. $MCAPTIVE
+
+if [ "$FAKE_IP" = "true" ]; then
+  iptables(){
+    log Iptables $@
+  }
+  ip(){
+    log ip $@
+  }
+fi
+
+mkdir -p $RUN $LOG
+if [ "$ISP" != "simul" -a "$ISP" != "test" ]; then
+  sudo chown -R www-data.www-data $RUN $LOG
+fi
+
+#
+# Loading of other libraries
+#
+
+for lib in misc users captive isp; do
+  . $WDIR/lib_$lib
+done
+
+#
+# Let's call an eventual function and print some variables
+#
+
+lib_init(){
+  captive_setup
+  isp_setup
+}
+
+COUNT=0
+
+#( sleep 1; log Empty reply; date > $REPLY ) &
+msg_snd_rpl $( date )
+
+log Starting dispatching queue and env to $ENV
+
+while true; do
+  log Going to receive command
+  line=$( msg_rcv_cmd )
+#    echo done > $CMDS
+#  done < $CMDS
+#done
+
+  set $line
+  cmd="$1"
+  shift
+  args="$@"
+  log Got command -$cmd- with arguments -$args-
+  VAR=""
+  case "$cmd" in
+  init)
+    log Doing lib_init
+    ;;
+  func)
+    FUNC=$1
+    shift
+    log Doing func: $FUNC $@
+    $FUNC $@ > $REPLY
+    log Replying $( cat $REPLY )
+    msg_snd_rpl "$( cat $REPLY )"
+    rm $REPLY
+    ;;
+  async)
+    FUNC=$1
+    shift
+    log Doing async of: $FUNC $@
+    $FUNC $@ > $REPLY
+    log return is $( cat $REPLY )
+    rm $REPLY
+    ;;
+  restart)
+    exit
+    ;;
+  count)
+    COUNT=$(( COUNT + 1 ))
+    log Counting: $COUNT
+    msg_snd_rpl $COUNT
+    #echo $COUNT > $REPLY
+    ;;
+  ping)
+    msg_snd_rpl pong
+    #echo pong > $REPLY
+    ;;
+  sleep)
+    sleep 10
+    ;;
+  esac
+  set > $ENV
+done

@@ -1,0 +1,28 @@
+#!/bin/bash
+RUN=/var/run/lib-net/ppp_loop
+echo > $RUN
+ISP=${1:-provider}
+
+stop_ppp(){
+  while poff -a; do
+    sleep 1
+  done
+  sleep 1
+}
+
+while [ "$( cat $RUN )" != "stop" ]; do
+  PL=$( /var/www/LibNet/lib_net print PROMOTION_LEFT )
+  if [ "$PL" ]; then
+    if [ "$PL" -gt 500000 ]; then
+      if ! pidof pppd; then
+        stop_ppp
+        pon $ISP
+      fi
+    else
+      stop_ppp
+      exit
+    fi
+  fi
+  sleep 5
+done
+stop_ppp

@@ -1,0 +1,3 @@
+#!/bin/bash
+echo 1 > `eval ls /sys/class/leds/guruplug\:red\:wmode/brightness`
+
