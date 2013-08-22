@@ -1,1 +1,9 @@
 Tools/msgtool
+.hg*
+run/
+log/
+multiconf-captive
+Test/run
+Test/log
+debs/
+Tools/msgtool
