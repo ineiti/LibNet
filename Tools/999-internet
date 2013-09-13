@@ -1,5 +1,6 @@
 <VirtualHost *:80>
-	ServerName internet.wifi
+	ServerName internet.profeda.org
+	ServerAlias internet.wifi
 	ServerAlias www.internet.wifi
 	ServerAlias *
 	ServerAdmin webmaster@localhost

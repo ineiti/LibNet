@@ -120,6 +120,7 @@ captive_clear(){
   done
 
   FIRST_INTERNAL=$( echo $INTERNAL_IPS | sed -e "s/ .*//" )
+  echo CAPTIVE IS $CAPTIVE_DNAT
   $IPNAT -I CAPTIVE -j DNAT --to-dest ${CAPTIVE_DNAT:-$FIRST_INTERNAL}
 
   for ip in $( cat $IP_LIST ); do

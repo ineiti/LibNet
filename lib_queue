@@ -27,7 +27,8 @@ fi
 
 mkdir -p $RUN $LOG
 if [ "$ISP" != "simul" -a "$ISP" != "test" ]; then
-  sudo chown -R www-data.www-data $RUN $LOG
+  WWW_USER=$( egrep "(http|www-data)" /etc/passwd | sed -e "s/:.*//" )
+  sudo chown -R $WWW_USER $RUN $LOG
 fi
 
 #
