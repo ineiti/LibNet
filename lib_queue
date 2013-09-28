@@ -77,6 +77,7 @@ while true; do
     shift
     log Doing func: $FUNC $@
     $FUNC $@ > $REPLY
+    loga $( set | egrep "^ALLOW_FREE" )
     log Replying $( cat $REPLY )
     msg_snd_rpl "$( cat $REPLY )"
     rm $REPLY

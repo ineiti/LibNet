@@ -1,4 +1,5 @@
 #!/bin/bash
+WDIR=$( dirname ${BASH_SOURCE[0]} )
 RUN=/var/run/lib-net/ppp_loop
 echo > $RUN
 ISP=${1:-provider}
@@ -11,16 +12,23 @@ stop_ppp(){
 }
 
 while [ "$( cat $RUN )" != "stop" ]; do
-  PL=$( /var/www/LibNet/lib_net print PROMOTION_LEFT )
-  if [ "$PL" ]; then
-    if [ "$PL" -gt 500000 ]; then
-      if ! pidof pppd; then
+  if [ "$HAS_PROMO" = "true" ]; then
+    PL=$( $WDIR/../lib_net print PROMOTION_LEFT )
+    if [ "$PL" ]; then
+      if [ "$PL" -gt 500000 ]; then
+        if ! pidof pppd; then
+          stop_ppp
+          pon $ISP
+        fi
+      else
         stop_ppp
-        pon $ISP
+        exit
       fi
-    else
+    fi
+  else
+    if ! pidof pppd; then
       stop_ppp
-      exit
+      pon $ISP
     fi
   fi
   sleep 5

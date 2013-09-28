@@ -17,6 +17,7 @@ DATE=$( date +%y%m%d-%H.%M )
 PATH=$PATH:/sbin:/usr/sbin
 MCAPTIVE=$WDIR/multiconf-captive
 FAKE_IP=false
+mkdir -p $RUN $LOG
 if pwd | egrep -q "/Test$"; then
   MCAPTIVE=$PWD/multiconf-captive
   . $MCAPTIVE
@@ -71,6 +72,13 @@ loga(){
 #
 # msg-setup
 #
+
+msg_check(){
+  if [ ! -f $WDIR/Tools/msgtool ]; then
+    gcc -o $WDIR/Tools/msgtool $WDIR/Tools/msgtool.c
+  fi
+}
+msg_check
 
 msg_delete(){
   log deleting msg-queues

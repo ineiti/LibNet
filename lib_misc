@@ -50,14 +50,15 @@ change_var(){
   local FILE=$1
   local VAR=$2
   local VALUE=$3
-  loga "Going to add $VAR = $VALUE to $FILE"
+  loga "Going to change $VAR = $VALUE to $FILE"
 
   if grep -q $VAR $FILE; then
     perl -pi -e "s/^($VAR)=.*/\1=$VALUE/" $FILE
   else
     echo "$VAR=$VALUE" >> $FILE
   fi
-  . ./$FILE
+  . $FILE
+  loga $( set | egrep "^$VAR" )
 }
 
 to_json(){
