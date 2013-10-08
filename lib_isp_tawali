@@ -1,0 +1,178 @@
+#!/bin/sh
+
+if [ "$LIB_TAWALI" = "loaded" ]; then
+#  return
+echo
+fi
+LIB_TAWALI=loaded
+. $WDIR/lib_usb
+
+TAWALI=$WDIR
+CLEFT=$RUN/tawali_credit
+UDAILY=$LOG/usage_daily
+UDAILY_TMP=$UDAILY.tmp
+DEV=/dev/ttyUSB2
+TAWALI_STATUS=$RUN/tawali_status
+PROMOTION_CORR=0
+touch $TAWALI_STATUS 
+for f in $CLEFT $UDAILY $UDAILY_TMP; do
+  if [ ! -f $f ]; then
+    log Setting $f to 0
+    echo 0 > $f
+  fi
+done
+
+#
+# Credit-add, send, get, update
+#
+
+isp_tawali_credit_add(){
+  STR=$( get_ussd "123*$1" )
+  log "Added credit $STR"
+  isp_tawali_credit_update
+  echo $STR
+}
+
+isp_tawali_credit_send(){
+  STR=$( get_ussd "190*1234*235$2*$1" )
+  log "Sent credit $2 to $1 -> $STR"
+  isp_tawali_credit_update
+  echo $STR
+}
+
+isp_tawali_credit_get(){
+  STR=$( ussd_decode $( gcom_call get_credit ) )
+  log "Got credit $STR"
+  if rs "$STR" solde; then
+    echo $STR | sed -e "s/.*est de \([0-9]*\)\..*/\1/"
+  fi
+}
+
+isp_tawali_get_cell(){
+  ISP_TAWALI_CELL=$( gcom_call get_cell | sed -e "s/[^a-f0-9,]//g" )
+  log "Got cell $ISP_TAWALI_CELL"
+  echo $ISP_TAWALI_CELL
+}
+
+isp_tawali_get_signal(){
+  ISP_TAWALI_SIGNAL=$( gcom_call get_signal )
+  log "Got signal $ISP_TAWALI_SIGNAL"
+  echo $ISP_TAWALI_SIGNAL
+}
+
+isp_tawali_credit_update(){
+  log Getting credit
+  return
+  C=$( isp_tawali_credit_get )
+  if [ "$C" ]; then
+    echo $C | sed -e "s/\..*//" > $CLEFT
+  fi
+}
+
+#
+# Connection-start, status, stop
+#
+
+isp_connection_start(){
+  if [ "$( isp_connection_status )" -gt 3 ]; then
+    loga Connection already up
+    return
+  fi
+  if ! grep -q starting $TAWALI_STATUS; then
+    loga Starting tawali-connection
+    nohup $WDIR/Tools/ppp_loop tawali > /dev/null 2>&1 &
+    echo $( date +%s ) - start > $CONNSTAT
+    echo starting > $TAWALI_STATUS
+    iptables -t nat -I POSTROUTING -o ppp0 -j MASQUERADE
+  fi
+}
+
+isp_connection_status(){
+  PPP=$( pidof pppd )
+  PAP=$( grep_pppd | grep CHAP )
+  PPP_IP=$( grep_pppd | grep -A 4 CHAP | grep local | sed -e "s/.* //" )
+  TUN=$( ip link | grep " tun" | sed -e "s/.*\(tun.\).*/\1/" )
+  ret=0
+  for a in "$PPP" "$PAP" "$PPP_IP" "$TUN" ""; do
+    if [ "$a" ]; then
+      ret=$(( ret + 1 ))
+    else
+      echo $ret
+      return
+    fi
+  done
+}
+
+isp_connection_stop(){
+  if [ "$CONNECTION_TYPE" = "permanent" ]; then
+    loga Not closing connection
+    return
+  fi
+  if ! grep -q stopping $TAWALI_STATUS; then
+    echo stopping > $TAWALI_STATUS
+    echo $( date +%s ) - stop > $CONNSTAT
+    loga Stopping tawali-connection
+    echo stop > $RUN/ppp_loop
+    iptables -t nat -D POSTROUTING -o ppp0 -j MASQUERADE
+  fi
+}
+
+isp_connected(){
+  if ifconfig | grep -q ppp; then
+    echo yes
+  else
+    echo no
+  fi
+}
+
+isp_reset_usage_connection(){
+  echo 0 > $UDAILY_TMP
+}
+
+isp_reset_usage_daily(){
+  TDAY=$( date +%D )
+  if ! grep -q $TDAY $LOG/usage_reset_last; then
+    echo $TDAY > $LOG/usage_reset_last
+    echo 0 > $UDAILY
+  fi
+}
+
+isp_update_daily(){
+  USAGE_NOW=$(( $( ppp_rx ) + $( ppp_tx ) ))
+  if [ "$USAGE_NOW" -gt 0 ]; then
+    USAGE_DIFF=$(( USAGE_NOW - $( cat $UDAILY_TMP ) ))
+    echo $USAGE_NOW > $UDAILY_TMP
+    USAGE_DAILY=$(( $( cat $UDAILY ) + $USAGE_DIFF ))
+    log Usage_now_diff_daily are $USAGE_NOW - $USAGE_DIFF - $USAGE_DAILY
+    if [ "$USAGE_DAILY" ]; then
+      echo $USAGE_DAILY > $UDAILY
+    else
+      echo 0 > $UDAILY
+    fi
+  else
+    echo 0 > $UDAILY_TMP
+  fi
+}
+
+isp_setup(){
+  loga isp_setup
+  isp_reset_usage_daily
+  isp_tawali_credit_update
+}
+
+isp_update_vars(){
+  log in function update_vars
+  if [ ! "$CLEFT$PLEFT" ]; then
+    return
+  fi
+  if [ ! -f $CLEFT -o "$1" ]; then
+    isp_tawali_credit_update > /dev/null
+  fi
+  CREDIT_LEFT=$( cat $CLEFT )
+  isp_update_daily > /dev/null
+  USAGE_DAILY=$( cat $UDAILY )
+  isp_tawali_get_cell > /dev/null
+  isp_tawali_get_signal > /dev/null
+}
+
+#isp_update_vars all
