@@ -1,0 +1,33 @@
+#!/bin/bash
+
+isp_connection_start(){
+  if which ifup; then
+    ifup $INTERFACE
+  else
+    netctl start $INTERFACE
+  fi
+}
+
+isp_connection_status(){
+  echo "4"
+}
+
+isp_connection_stop(){
+  if which ifdown; then
+    ifup $INTERFACE
+  else
+    netctl stop $INTERFACE
+  fi
+}
+
+isp_may_disconnect(){
+  loga Not disconnecting
+}
+
+isp_connected(){
+  if ifconfig | grep -q $INTERFACE; then
+    echo yes
+  else
+    echo no
+  fi
+}
