@@ -17,7 +17,6 @@ DATE=$( date +%y%m%d-%H.%M )
 PATH=$PATH:/sbin:/usr/sbin
 MCAPTIVE=$WDIR/multiconf-captive
 FAKE_IP=false
-mkdir -p $RUN $LOG
 if pwd | egrep -q "/Test$"; then
   MCAPTIVE=$PWD/multiconf-captive
   . $MCAPTIVE
@@ -36,6 +35,7 @@ if [ "$ISP" = "simul" ]; then
   RUN=$WDIR/run
   FAKE_IP=true
 fi
+
 CMDS=$RUN/cmd
 REPLY=$RUN/reply
 ENV=$RUN/env
@@ -43,6 +43,7 @@ RUN_PID=$RUN/pid
 CONNSTAT=$RUN/connection
 MSGS=$LOG/msgs.log
 ACTIONLOG=$LOG/action.log
+mkdir -p $RUN $LOG
 
 #
 # Different kind of logging facilities

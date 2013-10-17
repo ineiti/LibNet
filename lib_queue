@@ -58,9 +58,6 @@ log Starting dispatching queue and env to $ENV
 while true; do
   log Going to receive command
   line=$( msg_rcv_cmd )
-#    echo done > $CMDS
-#  done < $CMDS
-#done
 
   set $line
   cmd="$1"

@@ -44,7 +44,7 @@ class LibNet
   end
 	
   def call( func, *args )
-    dputs(3){ "Called with #{func} - #{args.inspect}" }
+    ddputs(3){ "Called with #{func} - #{args.inspect}" }
     @simul and return ""
     return %x[ #{@dir}/lib_net func #{func} #{args.join( ' ' )} ].chomp
   end
