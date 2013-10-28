@@ -2,9 +2,21 @@
 DIR=$( cd $( dirname $0 ); pwd )
 
 link(){
-  echo Installing $1 in $2
-  rm $2/$1
-  ln -s $DIR/$1 $2
+  inst "Installing $1 in $2" "rm $2/$1" "ln -s $DIR/$1 $2"
+}
+
+inst(){
+  echo -n $1 "[Y/n]"
+  shift
+  read rep
+  if [ "$rep" == "n" -o "$rep" == "N" ]; then
+    echo Doing nothing
+  else
+    for cmd in "$@"; do
+      echo Running $cmd
+      $cmd
+    done
+  fi
 }
 
 #dpkg -i $DIR/gsm-ussd_0.3.3-0_all.deb 
@@ -14,8 +26,10 @@ link ntpdate /etc/ppp/ip-up.d
 link 8led /etc/ppp/ip-up.d
 link tigo /etc/ppp/peers
 link openvpn-down /etc/ppp/ip-down.d
-link 500-profeda /etc/apache2/sites-enabled
-link 999-internet /etc/apache2/sites-enabled
+inst "Enable proxy-module" "a2enmod proxy" "a2enmod proxy_http"
+for site in 500-profeda 600-intern 601-wikis 602-files 999-gestion_internet; do
+  link $site /etc/apache2/sites-enabled
+done
 /etc/init.d/apache2 restart
 
 for f in check_ppp_crontab reset_usage_daily; do

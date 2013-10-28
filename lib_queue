@@ -84,7 +84,6 @@ while true; do
     log Doing async of: $FUNC $@
     $FUNC $@ > $REPLY
     log return is $( cat $REPLY )
-    rm $REPLY
     ;;
   restart)
     exit

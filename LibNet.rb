@@ -6,7 +6,7 @@
 require 'drb'
 
 if not respond_to? :dputs
-  DEBUG_LVL=3
+  DEBUG_LVL=5
   
   def dputs(a,&b)
     puts yield b
@@ -44,7 +44,7 @@ class LibNet
   end
 	
   def call( func, *args )
-    ddputs(3){ "Called with #{func} - #{args.inspect}" }
+    dputs(3){ "Called with #{func} - #{args.inspect}" }
     @simul and return ""
     return %x[ #{@dir}/lib_net func #{func} #{args.join( ' ' )} ].chomp
   end

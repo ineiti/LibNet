@@ -288,7 +288,7 @@ captive_rest_txt_ip(){
 }
 
 captive_restriction_set(){
-  log restricting -$REST-
+  log restricting -$REST- in file -$RESTRICTED-
   OLDREST=$( captive_restriction_get )
   if [ "$OLDREST" ]; then
     captive_rest_del $( captive_rest_txt_ip $OLDREST )
@@ -301,7 +301,7 @@ captive_restriction_set(){
     *)
       REST=""
   esac
-  echo $REST > $RESTRICTED
+  echo -n $REST > $RESTRICTED
 }
 
 captive_restriction_get(){
