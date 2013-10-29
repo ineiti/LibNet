@@ -1,0 +1,15 @@
+<VirtualHost *:80>
+	ServerName wiki.profeda.org
+	ServerAlias wiki*
+	ServerAdmin webmaster@localhost
+
+	<Proxy *>
+		Order Deny,Allow
+		Allow from all
+	</Proxy> 
+
+	ProxyRequests Off
+	ProxyPass / http://intern.profeda.org/wikis/
+	ProxyPassReverse / http://intern.profeda.org/wikis/
+
+</VirtualHost>
