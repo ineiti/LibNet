@@ -55,6 +55,7 @@ msg_snd_rpl $( date )
 
 log Starting dispatching queue and env to $ENV
 
+COUNT=0
 while true; do
   log Going to receive command
   line=$( msg_rcv_cmd )
@@ -63,7 +64,8 @@ while true; do
   cmd="$1"
   shift
   args="$@"
-  log Got command -$cmd- with arguments -$args-
+  COUNT=$(( COUNT + 1 ))
+  log Got command -$cmd- with arguments -$args- and count -$COUNT-
   VAR=""
   case "$cmd" in
   init)
@@ -72,18 +74,26 @@ while true; do
   func)
     FUNC=$1
     shift
-    log Doing func: $FUNC $@
-    $FUNC $@ > $REPLY
-    log Replying $( cat $REPLY )
-    msg_snd_rpl "$( cat $REPLY )"
-    rm $REPLY
+    C=$COUNT
+    log Doing func: $FUNC $@ - $C
+    $FUNC $@ > $REPLY.$C
+    if [ -e $REPLY.$C ]; then
+      log Replying $( cat $REPLY.$C )
+      msg_snd_rpl "$( cat $REPLY.$C )"
+      rm $REPLY.$C
+    else
+      log Empty reply
+      msg_snd_rpl ""
+    fi
     ;;
   async)
     FUNC=$1
     shift
-    log Doing async of: $FUNC $@
-    $FUNC $@ > $REPLY
-    log return is $( cat $REPLY )
+    C=$COUNT
+    log Doing async of: $FUNC $@ - $C
+    $FUNC $@ > $REPLY.$C
+    log return is $( cat $REPLY.$C )
+    rm $REPLY.$C
     ;;
   restart)
     exit
@@ -102,5 +112,6 @@ while true; do
     sleep 10
     ;;
   esac
-  set > $ENV
+  set > $ENV.tmp
+  mv $ENV.tmp $ENV
 done

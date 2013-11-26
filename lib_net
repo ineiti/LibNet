@@ -109,9 +109,9 @@ msg_snd_rpl(){
 }
 
 msg_rcv_rpl(){
-  REPLY=$( $WDIR/Tools/msgtool r 3 )
-  log Reply is $REPLY
-  echo $REPLY
+  RCV_REPLY=$( $WDIR/Tools/msgtool r 3 )
+  log Reply is $RCV_REPLY
+  echo $RCV_REPLY
 }
 
 #for f in $CMDS $REPLY; do
@@ -135,6 +135,8 @@ start_queue(){
 }
 
 
+( 
+flock -e 200
 if [ "$1" != "kill" ]; then
   if [ -f $RUN_PID ]; then
     if ! ps ax | grep -q "^ *$( cat $RUN_PID )"; then
@@ -174,7 +176,7 @@ if [ "$1" ]; then
       msg_rcv_rpl
     fi
     ;;
-  sleep|restart)
+  sleep|restart|reset)
     echo doing $@
     msg_snd_cmd $@
     #echo $@ > $CMDS
@@ -200,3 +202,4 @@ if [ "$1" ]; then
     grep "^$VAR=" $ENV | sed -e "s/.*=//"
   fi
 fi
+) 200>/tmp/libnet.lockfile

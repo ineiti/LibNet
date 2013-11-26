@@ -54,6 +54,9 @@ isp_setup(){
 isp_reset_usage_daily(){
   loga Resetting daily usage
 }
+isp_update_vars(){
+  loga Updating vars
+}
 
 # Sets up and uses an ISP
 test "$ISP" && . $WDIR/lib_isp_$ISP

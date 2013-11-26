@@ -26,7 +26,7 @@ link ntpdate /etc/ppp/ip-up.d
 link 8led /etc/ppp/ip-up.d
 link tigo /etc/ppp/peers
 link openvpn-down /etc/ppp/ip-down.d
-inst "Enable proxy-module" "a2enmod proxy" "a2enmod proxy_http"
+inst "Enable proxy- and rewrite-module" "a2enmod proxy" "a2enmod proxy_http" "a2enmod rewrite"
 for site in 500-profeda 600-intern 601-wikis 602-files 999-gestion_internet; do
   link $site /etc/apache2/sites-enabled
 done

@@ -12,7 +12,7 @@ CLEFT=$RUN/tigo_credit
 PLEFT=$RUN/tigo_promotion
 UDAILY=$LOG/usage_daily
 UDAILY_TMP=$UDAILY.tmp
-DEV=/dev/ttyUSB2
+DEV=${DEV:-/dev/ttyUSB2}
 TIGO_STATUS=$RUN/tigo_status
 PROMOTION_CORR=0
 touch $TIGO_STATUS 

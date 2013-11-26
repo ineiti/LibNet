@@ -6,7 +6,7 @@ opengt
  flash 0.1
 
 :start
- send "AT+CUSD=1,AA980C3702,15^m"
+ send "AT+CUSD=1,\"AA980C3702\"^m"
  waitfor 20 "+CUSD: 0,\""
  get 1 "^m" $s
  print $s

@@ -6,7 +6,7 @@
 require 'drb'
 
 if not respond_to? :dputs
-  DEBUG_LVL=5
+  DEBUG_LVL=2
   
   def dputs(a,&b)
     puts yield b
@@ -62,7 +62,7 @@ class LibNet
   end
 
   def print( var )
-    dputs(4){ "Printing #{var}" }    
+    dputs(4){ "Printing #{var}" }
     @simul and return ""
     IO.foreach(@env){|l|
       if l =~ /^#{var}=(.*)/
