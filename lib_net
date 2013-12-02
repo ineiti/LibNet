@@ -135,8 +135,8 @@ start_queue(){
 }
 
 
-( 
-flock -e 200
+#( 
+#flock -e 200
 if [ "$1" != "kill" ]; then
   if [ -f $RUN_PID ]; then
     if ! ps ax | grep -q "^ *$( cat $RUN_PID )"; then
@@ -176,10 +176,15 @@ if [ "$1" ]; then
       msg_rcv_rpl
     fi
     ;;
-  sleep|restart|reset)
+  restart|reset)
     echo doing $@
     msg_snd_cmd $@
     #echo $@ > $CMDS
+    ;;
+  sleep)
+    echo doing sleep
+    msg_snd_cmd $@
+    msg_rcv_rpl
     ;;
   count|ping)
     echo doing $@
@@ -202,4 +207,4 @@ if [ "$1" ]; then
     grep "^$VAR=" $ENV | sed -e "s/.*=//"
   fi
 fi
-) 200>/tmp/libnet.lockfile
+#) 200>/tmp/libnet.lockfile

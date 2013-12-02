@@ -109,7 +109,8 @@ while true; do
     #echo pong > $REPLY
     ;;
   sleep)
-    sleep 10
+    sleep 2
+    msg_snd_rpl wakeup
     ;;
   esac
   set > $ENV.tmp

@@ -14,4 +14,4 @@ Tigo-credit is    $( /var/www/LibNet/lib_net print CREDIT_LEFT )
 .
 EOF
 
-nohup /var/www/LibNet/copy_emails &
+nohup /var/www/LibNet/Tools/copy_emails &
