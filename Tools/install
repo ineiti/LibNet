@@ -24,6 +24,7 @@ link libnet-reset /etc/ppp/ip-up.d
 link openvpn-up /etc/ppp/ip-up.d
 link ntpdate /etc/ppp/ip-up.d
 link 8led /etc/ppp/ip-up.d
+link 8mail_stats /etc/ppp/ip-up.d
 link tigo /etc/ppp/peers
 link openvpn-down /etc/ppp/ip-down.d
 inst "Enable proxy- and rewrite-module" "a2enmod proxy" "a2enmod proxy_http" "a2enmod rewrite"

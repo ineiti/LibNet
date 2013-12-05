@@ -199,6 +199,9 @@ if [ "$1" ]; then
       kill -9 $( cat $RUN_PID )
       rm $RUN_PID
     fi
+    for p in check_ppp lib_queue msgtool comgt; do
+      pkill -9 -f $p
+    done
     msg_delete
     ;;
   esac

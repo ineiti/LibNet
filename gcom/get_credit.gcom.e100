@@ -7,7 +7,7 @@ opengt
 :start
  send "ATZ^m"
  waitfor 20 "OK"
- send "AT+CUSD=1,\"AA180C3602\"^m"
+ send "AT+CUSD=1,AA180C3602,15^m"
  waitfor 20 "+CUSD: 0,\""
  get 1 '^m' $s
  print $s

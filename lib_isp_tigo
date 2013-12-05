@@ -60,7 +60,7 @@ isp_tigo_promotion_add(){
         gammu sendsms TEXT $PROMOTION -text "kattir" 2>/dev/null
       else
         log Adding with gammu v1
-        echo kattir | gammu --config $WDIR/conf/gammurc sendsms TEXT $PROMOTION 2>/dev/null
+        echo kattir | gammu --config $WDIR/gcom/gammurc sendsms TEXT $PROMOTION 2>/dev/null
       fi
     fi
   fi
