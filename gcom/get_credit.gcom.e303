@@ -1,0 +1,16 @@
+opengt
+ set com 115200n81
+ set senddelay 0.02
+ waitquiet 0.2 0.2
+ flash 0.1
+
+:start
+ send "ATZ^m"
+ waitfor 20 "OK"
+ send "AT+CUSD=1,\"AA180C3602\"^m"
+ waitfor 20 "+CUSD: 0,\""
+ get 1 '^m' $s
+ print $s
+
+:continue
+ exit 0
