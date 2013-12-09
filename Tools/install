@@ -1,34 +1,13 @@
 #!/bin/bash
-DIR=$( cd $( dirname $0 ); pwd )
-
-link(){
-  inst "Installing $1 in $2" "rm $2/$1" "ln -s $DIR/$1 $2"
-}
-
-inst(){
-  echo -n $1 "[Y/n]"
-  shift
-  read rep
-  if [ "$rep" == "n" -o "$rep" == "N" ]; then
-    echo Doing nothing
-  else
-    for cmd in "$@"; do
-      echo Running $cmd
-      $cmd
-    done
-  fi
-}
+. ../../Config/lib_config
 
 #dpkg -i $DIR/gsm-ussd_0.3.3-0_all.deb 
 link libnet-reset /etc/ppp/ip-up.d
-link openvpn-up /etc/ppp/ip-up.d
 link ntpdate /etc/ppp/ip-up.d
 link 8led /etc/ppp/ip-up.d
-link 8mail_stats /etc/ppp/ip-up.d
 link tigo /etc/ppp/peers
-link openvpn-down /etc/ppp/ip-down.d
 inst "Enable proxy- and rewrite-module" "a2enmod proxy" "a2enmod proxy_http" "a2enmod rewrite"
-for site in 500-profeda 600-intern 601-wikis 602-files 999-gestion_internet; do
+for site in 999-gestion_internet; do
   link $site /etc/apache2/sites-enabled
 done
 /etc/init.d/apache2 restart
@@ -36,3 +15,7 @@ done
 for f in check_ppp_crontab reset_usage_daily; do
   link $f /etc/cron.d
 done
+
+echo - "internet-stick is e303 or e100? "
+read stick
+$WDIR/gcom_config $stXrick
