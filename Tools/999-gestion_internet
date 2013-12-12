@@ -11,7 +11,7 @@
 	</Proxy> 
 
 	ProxyRequests Off
-	ProxyPass / http://gestion.profeda.org:3302/
+	ProxyPass / http://gestion.profeda.org:3302/ retry=0
 	ProxyPassReverse / http://gestion.profeda.org:3302/
 
         #Redirect / http://internet.profeda.org:3302
