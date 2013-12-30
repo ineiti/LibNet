@@ -19,7 +19,8 @@ connect "/usr/sbin/chat -v -f /etc/chatscripts/gprs"
 /dev/ttyUSB0
 
 # Speed of the serial line.
-230400
+460800
+#9600
 
 # Assumes that your IP address is allocated dynamically by the ISP.
 noipdefault
