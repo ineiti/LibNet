@@ -12,7 +12,7 @@ CLEFT=$RUN/tigo_credit
 PLEFT=$RUN/tigo_promotion
 UDAILY=$LOG/usage_daily
 UDAILY_TMP=$UDAILY.tmp
-DEV=/dev/ttyUSB2
+DEV=${DEV:-/dev/ttyUSB2}
 TIGO_STATUS=$RUN/tigo_status
 PROMOTION_CORR=0
 touch $TIGO_STATUS 
@@ -31,6 +31,10 @@ isp_tigo_promotion_add(){
   log Promotion add $1 from user $2
   if [ "$1" ]; then
     case "$1" in
+      hour|20MB)
+        PROMOTION=500
+        COST=500
+        ;;
       hour|30MB)
         PROMOTION=1111
         COST=800
@@ -56,7 +60,7 @@ isp_tigo_promotion_add(){
         gammu sendsms TEXT $PROMOTION -text "kattir" 2>/dev/null
       else
         log Adding with gammu v1
-        echo kattir | gammu --config $WDIR/conf/gammurc sendsms TEXT $PROMOTION 2>/dev/null
+        echo kattir | gammu --config $WDIR/gcom/gammurc sendsms TEXT $PROMOTION 2>/dev/null
       fi
     fi
   fi

@@ -157,8 +157,12 @@ captive_cleanup(){
   local CS=$( isp_connection_status )
   if [ "$CS" = 0 ]; then
     if [ "$( ips_connected )" ]; then
-      log "Disconnecting everybody as we're not connected"
-      users_disconnect_all
+      if [ "$CONNECTION_TYPE" != "permanent" ]; then
+        log "Disconnecting everybody as we're not connected"
+        users_disconnect_all
+      else
+        log "Keeping users while we hope for a return of the connection"
+      fi
     fi
     return
   elif [ "$CS" -lt 4 ]; then
@@ -288,7 +292,7 @@ captive_rest_txt_ip(){
 }
 
 captive_restriction_set(){
-  log restricting -$REST-
+  log restricting -$REST- in file -$RESTRICTED-
   OLDREST=$( captive_restriction_get )
   if [ "$OLDREST" ]; then
     captive_rest_del $( captive_rest_txt_ip $OLDREST )
@@ -301,7 +305,7 @@ captive_restriction_set(){
     *)
       REST=""
   esac
-  echo $REST > $RESTRICTED
+  echo -n $REST > $RESTRICTED
 }
 
 captive_restriction_get(){

@@ -14,7 +14,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-#define MAX_SEND_SIZE 80
+#define MAX_SEND_SIZE 1024
 
 struct mymsgbuf {
         long mtype;

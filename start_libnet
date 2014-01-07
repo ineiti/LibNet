@@ -2,6 +2,10 @@
 
 logger -s "Starting LibNet"
 cd $( dirname $0 )
+#if pgrep -f lib_queue; then
+#  logger -s "Killing old libqueue"
+#  pkill -9 -f lib_queue
+#fi
 if pgrep -f ruby.*LibNet; then
   logger -s "Killing old LibNet"
   pkill -f ruby.*LibNet

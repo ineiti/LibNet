@@ -1,8 +1,10 @@
 #!/bin/bash
 WDIR=$( dirname ${BASH_SOURCE[0]} )
-$WDIR/../lib_net func isp_update_vars
-CHECK_PPP=$( $WDIR/../lib_net print CHECK_PPP )
-CONNECTION_TYPE=$( $WDIR/../lib_net print CONNECTION_TYPE )
+$WDIR/../lib_net func isp_update_vars > /dev/null
+
+for v in CHECK_PPP CONNECTION_TYPE OPENVPN_ALLOW_DOUBLE; do
+  eval $v="$( $WDIR/../lib_net print $v )"
+done
 
 PATH=$PATH:/sbin:/usr/sbin
 CNT=/var/run/lib-net/check_ppp
@@ -19,27 +21,41 @@ FAILED=""
 
 if ! grep -q ppp0 /proc/net/dev; then
   FAILED=ppp
+elif ! route -n | egrep "^0.0.0.0" > /dev/null; then
+  FAILED=default
+elif ! ping -c 3 8.8.8.8 > /dev/null; then
+  FAILED=ping
 elif ! grep -q tun0 /proc/net/dev; then
   FAILED=openvpn
 elif grep -q tun1 /proc/net/dev; then
-  FAILED=openvpn_double
-  killall -9 openvpn
-  service openvpn restart
-elif ! ping -c 3 8.8.8.8 > /dev/null; then
-  FAILED=ping
-elif ! route -n | egrep "^0.0.0.0" > /dev/null; then
-  FAILED=default
+  if [ ! "$OPENVPN_ALLOW_DOUBLE" ]; then
+    FAILED=openvpn_double
+    killall -9 openvpn
+    service openvpn restart
+  fi
 fi
 
 if [ "$FAILED" ]; then
   echo $(( count + 1 )) > $CNT
   logger "Internet-check failed for reason: $FAILED - counter is $count"
   if [ "$count" -gt 5 ]; then
-    logger "Failed for 5 minutes, restarting"
-    ifdown ppp0
-    service openvpn stop
-    killall -9 openvpn
-    echo 0 > $CNT
+    logger "Failed for 5 minutes in $FAILED"
+    case $FAILED in
+    openvpn)
+      service openvpn restart
+      ;;
+    *)
+      ifdown ppp0
+      service openvpn stop
+      killall -9 openvpn
+      echo 0 > $CNT
+      while poff -a; do
+        echo Killed pppd
+      done
+      ifup ppp0
+      service openvpn start
+      ;;
+    esac
   fi
 else
   echo 0 > $CNT

@@ -3,6 +3,7 @@ WDIR=$( dirname ${BASH_SOURCE[0]} )
 RUN=/var/run/lib-net/ppp_loop
 echo > $RUN
 ISP=${1:-provider}
+HAS_PROMO=$( $WDIR/../lib_net print HAS_PROMO )
 
 stop_ppp(){
   while poff -a; do
