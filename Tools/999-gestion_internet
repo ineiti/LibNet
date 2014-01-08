@@ -1,0 +1,28 @@
+<VirtualHost *:80>
+	ServerName internet.profeda.org
+	ServerAlias gestion.profeda.org
+	ServerAlias gestion
+	ServerAlias internet
+	ServerAdmin webmaster@localhost
+
+	<Proxy *>
+		Order Deny,Allow
+		Allow from all
+	</Proxy> 
+
+	ProxyRequests Off
+	ProxyPass / http://gestion.profeda.org:3302/ retry=0
+	ProxyPassReverse / http://gestion.profeda.org:3302/
+
+        #Redirect / http://internet.profeda.org:3302
+
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName captive.profeda.org
+	ServerAlias *
+
+	RewriteEngine On
+	RewriteRule /.* http://local.profeda.org
+</VirtualHost>
+

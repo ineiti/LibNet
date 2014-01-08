@@ -1,0 +1,18 @@
+#!/bin/bash
+
+. ../../Config/lib_config
+
+case $1 in
+e303|e100)
+  cd ../gcom
+  for a in *$1; do 
+    TARGET=$( basename $a .$1 )
+    rm -f $TARGET
+    ln -s $a $TARGET
+  done
+  ;;
+*)
+  echo Only e303 and e100 are supported
+  exit 1
+  ;;
+esac
