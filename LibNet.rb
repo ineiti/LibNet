@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -wKU
+#!/usr/bin/env ruby -wKU
 # This is the LibNet-wrapper for the bash-scripts that wrap the
 # gateway-functionality of the internet-router.
 # The bash-scripts are thought to be used in a wireless-router, too.
