@@ -27,3 +27,12 @@ fi
 
 # Where to redirect the packets for non-authenticated users
 #CAPTIVE_DNAT=""
+
+# Bypass openvpn-check - necessary if you have more than 1 openvpn-instance running
+#OPENVPN_ALLOW_DOUBLE="true"
+
+# What sources are allowed to connect directly
+#ALLOW_SRC_DIRECT=""
+
+# What sources are allowed to connect through the proxy
+#ALLOW_SRC_PROXY=""

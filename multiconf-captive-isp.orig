@@ -9,6 +9,11 @@ COST_BASE=5
 # Cost shared between users
 COST_SHARED=10
 
+# Is there a promotion-system that will be checked before connecting?
 HAS_PROMO=false
 
+# Do we have to check for credits?
 HAS_CREDIT=false
+
+# Assure ppp is running?
+CHECK_PPP=false
