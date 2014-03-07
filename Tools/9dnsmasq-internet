@@ -1,5 +1,0 @@
-#!/bin/bash
-
-perl -pe "s/^address=\/#/#address=\/#/" /etc/dnsmasq.conf > /tmp/dnsmasq.conf
-mv /tmp/dnsmasq.conf /etc/dnsmasq.conf
-service dnsmasq restart

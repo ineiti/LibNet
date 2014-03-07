@@ -13,7 +13,7 @@
 # MUST CHANGE: replace ******** with the phone number of your provider.
 # The /etc/chatscripts/pap chat script may be modified to change the
 # modem initialization string.
-connect "/usr/sbin/chat -v -f /etc/chatscripts/gprs"
+connect "/usr/sbin/chat -v -f /etc/ppp/gprs"
 
 # Serial device to which the modem is connected.
 /dev/ttyUSB0

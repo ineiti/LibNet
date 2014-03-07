@@ -13,6 +13,6 @@ COST_REAL=10
 
 HAS_PROMO=false
 
-HAS_CREDIT=simul
+HAS_CREDIT=false
 
-ALLOW_FREE=false
+ALLOW_FREE=true
