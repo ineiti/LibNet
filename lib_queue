@@ -95,7 +95,7 @@ while true; do
     log return is $( cat $REPLY.$C )
     rm $REPLY.$C
     ;;
-  restart)
+  restart|reset)
     exit
     ;;
   count)
@@ -111,6 +111,9 @@ while true; do
   sleep)
     sleep 2
     msg_snd_rpl wakeup
+    ;;
+  update_config)
+    . $MCAPTIVE
     ;;
   esac
   set > $ENV.tmp

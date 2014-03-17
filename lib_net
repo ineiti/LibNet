@@ -176,7 +176,7 @@ if [ "$1" ]; then
       msg_rcv_rpl
     fi
     ;;
-  restart|reset)
+  restart|reset|update_config)
     echo doing $@
     msg_snd_cmd $@
     #echo $@ > $CMDS

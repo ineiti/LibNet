@@ -2,6 +2,7 @@
 
 USERS=/etc/captive.users
 USERS_CONNECTED=$RUN/connected
+DISCONNECT_LIST=""
 touch $USERS_CONNECTED
 
 users_connected_delete(){
@@ -157,9 +158,16 @@ user_disconnect(){
     log User $NAME is not connected
   fi
 
+  DISCONNECT_LIST="$DISCONNECT_LIST $NAME"
+
   if [ ! -s $USERS_CONNECTED ]; then
     isp_may_disconnect
   fi
+}
+
+users_disconnected(){
+  echo $DISCONNECT_LIST
+  DISCONNECT_LIST=""
 }
 
 user_cost_max(){
