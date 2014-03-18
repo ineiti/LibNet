@@ -36,3 +36,6 @@ fi
 
 # What sources are allowed to connect through the proxy
 #ALLOW_SRC_PROXY=""
+
+# Used by captive and Gestion( true,false ) - all:no captive portal
+#ALLOW_FREE=""

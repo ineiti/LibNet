@@ -50,15 +50,26 @@ change_var(){
   local FILE=$1
   local VAR=$2
   local VALUE=$3
-  loga "Going to change $VAR = $VALUE to $FILE"
+  loga "Going to change $VAR = -$VALUE- in $FILE"
 
-  if grep -q $VAR $FILE; then
-    perl -pi -e "s/^($VAR)=.*/\1=$VALUE/" $FILE
+  if egrep -q "^#*$VAR" $FILE; then
+    perl -pi -e "s/^#*($VAR)=.*/\1=\"$VALUE\"/" $FILE
   else
     echo "$VAR=$VALUE" >> $FILE
   fi
   . $FILE
   loga $( set | egrep "^$VAR" )
+}
+
+set_multiconf(){
+  local kv
+  local k
+  local v
+  for kv in $@; do
+    k=$( echo $kv | cut -f 1 -d "=" )
+    v=$( echo $kv | cut -f 2 -d "=" )
+    change_var $WDIR/multiconf-captive $k $v
+  done
 }
 
 to_json(){

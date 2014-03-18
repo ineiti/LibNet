@@ -58,5 +58,16 @@ isp_update_vars(){
   loga Updating vars
 }
 
+ISPs=$( ls $WDIR/multiconf-captive-* | grep -v "\." | sed -e "s/.*-//" | xargs echo )
+
+isp_set(){
+  if [ -f $WDIR/multiconf-captive-$1 ]; then
+    ISP=$1
+    . $WDIR/lib_isp_$ISP
+    change_var $WDIR/multiconf-captive ISP $ISP
+    . $WDIR/multiconf-captive
+  fi
+}
+
 # Sets up and uses an ISP
-test "$ISP" && . $WDIR/lib_isp_$ISP
+isp_set $ISP

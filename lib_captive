@@ -120,8 +120,10 @@ captive_clear(){
   done
 
   FIRST_INTERNAL=$( echo $INTERNAL_IPS | sed -e "s/ .*//" )
-  echo CAPTIVE IS $CAPTIVE_DNAT
-  $IPNAT -I CAPTIVE -j DNAT --to-dest ${CAPTIVE_DNAT:-$FIRST_INTERNAL}
+  if [ "$CAPTIVE_DNAT" ]; then
+    echo CAPTIVE IS $CAPTIVE_DNAT
+    $IPNAT -I CAPTIVE -j DNAT --to-dest ${CAPTIVE_DNAT:-$FIRST_INTERNAL}
+  fi
 
   for ip in $( cat $IP_LIST ); do
     captive_ip_accept $ip
@@ -233,7 +235,9 @@ captive_setup(){
 
   delete_chain FORWARD FCAPTIVE
   #iptables -I FCAPTIVE -j RETURN
-  iptables -P FORWARD DROP
+  if [ "$ALLOW_FREE" != "all" ]; then
+    iptables -P FORWARD DROP
+  fi
 
   captive_clear
 
