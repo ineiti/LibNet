@@ -1,9 +1,6 @@
 <VirtualHost *:80>
-	ServerName internet.profeda.org
-	ServerAlias gestion.profeda.org
-	ServerAlias gestion
-	ServerAlias internet
-	ServerAdmin webmaster@localhost
+	ServerName admin.profeda.org
+	ServerAlias admin
 
 	<Proxy *>
 		Order Deny,Allow
@@ -11,11 +8,20 @@
 	</Proxy> 
 
 	ProxyRequests Off
-	ProxyPass / http://gestion.profeda.org:3302/ retry=0
-	ProxyPassReverse / http://gestion.profeda.org:3302/
+	ProxyPass / http://admin.profeda.org:3302/ retry=0
+	ProxyPassReverse / http://admin.profeda.org:3302/
 
-        #Redirect / http://internet.profeda.org:3302
+</VirtualHost>
 
+<VirtualHost *:80>
+	ServerName internet.profeda.org
+	ServerAlias gestion.profeda.org
+	ServerAlias gestion
+	ServerAlias internet
+	ServerAdmin webmaster@localhost
+
+	RewriteEngine On
+	RewriteRule /.* http://admin.profeda.org
 </VirtualHost>
 
 <VirtualHost *:80>
