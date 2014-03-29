@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# ifplugd.action script for netctl
+
+. /usr/lib/network/globals
+
+PROFILE_FILE="$STATE_DIR/ifplugd_$1.profile"
+
+case "$2" in
+  up)
+    dhcpcd $1
+    if [ "$1" = "eth2" ]; then
+      /var/profeda/LibNet/Tools/9dnsmasq-internet.sh
+    fi
+  ;;
+  down)
+    pkill -9 -f "dhcpcd $1"
+    if [ "$1" = "eth2" ]; then
+      /var/profeda/LibNet/Tools/9dnsmasq-catchall.sh
+    fi
+  ;;
+  *)
+    echo "Wrong arguments" >&2
+  ;;
+esac
+
+exit 0
+
+
+# vim: ft=sh ts=4 et sw=4:

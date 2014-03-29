@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-perl -pe "s/^address=\/#/#address=\/#/" /etc/dnsmasq.conf > /tmp/dnsmasq.conf
+/usr/bin/perl -pe "s/address=\/#/#address=\/#/" /var/profeda/LibNet/Tools/dnsmasq.conf > /tmp/dnsmasq.conf
 mv /tmp/dnsmasq.conf /etc/dnsmasq.conf
 if [ -x /usr/bin/systemctl ]; then
   systemctl restart dnsmasq

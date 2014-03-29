@@ -1,7 +1,7 @@
 #!/bin/bash
 
 isp_connection_start(){
-  if which -s ifup; then
+  if which ifup > /dev/null; then
     ifup $INTERFACE
   else
     netctl start $INTERFACE
@@ -9,11 +9,15 @@ isp_connection_start(){
 }
 
 isp_connection_status(){
-  echo "4"
+  if [ "$( isp_connected)" = "yes" ]; then
+    echo "3"
+  else
+    echo "1"
+  fi
 }
 
 isp_connection_stop(){
-  if which -s ifdown; then
+  if which ifdown > /dev/null; then
     ifup $INTERFACE
   else
     netctl stop $INTERFACE
