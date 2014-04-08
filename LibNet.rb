@@ -26,6 +26,7 @@ class LibNet
     # As lib_net will leave a child around, we have to fork it and
     # hope it's done in 1 second
     if not @simul
+      @libnet = Mutex.new
       Process.detach( Process.fork { 
           dputs(3){"killing"}
           %x[ #{@dir}/lib_net kill ]
@@ -38,7 +39,6 @@ class LibNet
       %x[ #{@dir}/lib_net func captive_setup ]
       @env = call_print( :ENV )
       dputs(3){"Env is at #{@env}"}
-      @libnet = Mutex.new
     else
       dputs(1){"Simulation only"}
     end
