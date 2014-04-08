@@ -38,6 +38,7 @@ class LibNet
       %x[ #{@dir}/lib_net func captive_setup ]
       @env = call_print( :ENV )
       dputs(3){"Env is at #{@env}"}
+      @libnet = Mutex.new
     else
       dputs(1){"Simulation only"}
     end
@@ -46,19 +47,25 @@ class LibNet
   def call( func, *args )
     dputs(3){ "Called with #{func} - #{args.inspect}" }
     @simul and return ""
-    return %x[ #{@dir}/lib_net func #{func} #{args.join( ' ' )} ].chomp
+    @libnet.synchronize {
+      return %x[ #{@dir}/lib_net func #{func} #{args.join( ' ' )} ].chomp
+    }
   end
 
   def async( func, *args )
     dputs(3){ "Async with #{func} - #{args.inspect}" }
     @simul and return ""
-    return %x[ #{@dir}/lib_net async #{func} #{args.join( ' ' )} ].chomp
+    @libnet.synchronize {
+      return %x[ #{@dir}/lib_net async #{func} #{args.join( ' ' )} ].chomp
+    }
   end
   
   def call_print( var )
     dputs(2){ "Printing #{var} through lib_net" }    
     @simul and return ""
-    return %x[ #{@dir}/lib_net print #{var} ].chomp
+    @libnet.synchronize {
+      return %x[ #{@dir}/lib_net print #{var} ].chomp
+    }
   end
 
   def print( var )
