@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Connection-type - permanent or ondemand
+CONNECTION_TYPE=permanent
+INTERFACE=eth0
+
+# Cost per minute
+# Base cost
+COST_BASE=5
+# Cost shared between users
+COST_SHARED=10
+
+HAS_PROMO=false
+
+HAS_CREDIT=false
+
+ALLOW_FREE=true
+
+ALLOW_DST_DIRECT=192.168.1.1
+
+ALLOW_SRC_DIRECT=0/0
