@@ -32,7 +32,7 @@ sms_delete(){
 
 grep_pppd(){
   if [ -f /var/log/syslog ]; then
-    grep -a pppd /var/log/syslog | tail | grep -A 10 started
+    grep -a pppd /var/log/syslog | tail -n 25 | grep -A 25 started
   else
     journalctl -b 0 /usr/bin/pppd | grep -a pppd | tail -n 20 | grep -A 20 ": pppd.*started"
   fi

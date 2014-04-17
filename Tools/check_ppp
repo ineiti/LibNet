@@ -23,7 +23,7 @@ if ! grep -q ppp0 /proc/net/dev; then
   FAILED=ppp
 elif ! route -n | egrep "^0.0.0.0" > /dev/null; then
   FAILED=default
-elif ! ping -c 3 8.8.8.8 > /dev/null; then
+elif ! httping -c 3 google.ch > /dev/null; then
   FAILED=ping
 elif ! grep -q tun0 /proc/net/dev; then
   FAILED=openvpn
@@ -58,6 +58,9 @@ if [ "$FAILED" ]; then
     esac
   fi
 else
+  if [ "$count" -gt 0 ]; then
+    logger "Reset counter to zero - back to normal"
+  fi
   echo 0 > $CNT
 fi
 
