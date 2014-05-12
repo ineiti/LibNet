@@ -6,11 +6,25 @@ link libnet-reset /etc/ppp/ip-up.d
 link ntpdate /etc/ppp/ip-up.d
 link 8led /etc/ppp/ip-up.d
 link tigo /etc/ppp/peers
-inst "Enable proxy- and rewrite-module" "a2enmod proxy" "a2enmod proxy_http" "a2enmod rewrite"
-for site in 999-gestion_internet; do
-  link $site /etc/apache2/sites-enabled
-done
-/etc/init.d/apache2 restart
+case $DIST in
+Arch?Linux)
+  for site in 999-gestion_internet; do
+    link $site /etc/httpd/conf/sites
+  done
+  systemctl restart httpd
+  ;;
+Ubuntu|Debian)
+  inst "Enable proxy- and rewrite-module" "a2enmod proxy" "a2enmod proxy_http" "a2enmod rewrite"
+  for site in 999-gestion_internet; do
+    link $site /etc/apache2/sites-enabled
+  done
+  /etc/init.d/apache2 restart
+  ;;
+*)
+  echo Unknown distribution: $DIST
+  exit
+  ;;
+esac
 
 for f in check_ppp_crontab reset_usage_daily; do
   link $f /etc/cron.d
@@ -18,4 +32,12 @@ done
 
 echo - "internet-stick is e303 or e100? "
 read stick
-$WDIR/gcom_config $stXrick
+case $stick in
+e303|e100)
+  $WDIR/gcom_config $stick
+  ;;
+*)
+  echo "Error: stick $stick not known"
+  exit
+  ;;
+esac
