@@ -10,7 +10,12 @@ isp_connection_start(){
 
 isp_connection_status(){
   if [ "$( isp_connected)" = "yes" ]; then
-    echo "3"
+    TUN=$( ip link | grep " tun" | sed -e "s/.*\(tun.\).*/\1/" )
+    if [ "$TUN" ]; then
+      echo "4"
+    else
+      echo "3"
+    fi
   else
     echo "1"
   fi

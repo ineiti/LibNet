@@ -2,7 +2,7 @@
 
 # Connection-type - permanent or ondemand
 CONNECTION_TYPE=permanent
-INTERFACE=eth0
+INTERFACE=eth2
 
 # Cost per minute
 # Base cost

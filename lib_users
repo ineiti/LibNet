@@ -40,6 +40,18 @@ users_connected(){
   cat $USERS_CONNECTED | sed -e "s/.* //"
 }
 
+users_check_connected(){
+  TMP=/tmp/connected.tmp
+  while read ip name; do
+    if [ "$name" ]; then
+      echo $ip $name >> $TMP
+    else
+      loga users_check_connected "Deleting $ip"
+    fi
+  done < $USERS_CONNECTED
+  mv $TMP $USERS_CONNECTED
+}
+
 ips_connected(){
   cat $USERS_CONNECTED | sed -e "s/ .*//"
 }

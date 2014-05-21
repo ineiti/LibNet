@@ -156,6 +156,7 @@ captive_packets_count(){
 
 # This can be called from time to time to check on idle people
 captive_cleanup(){
+  users_check_connected
   local CS=$( isp_connection_status )
   if [ "$CS" = 0 ]; then
     if [ "$( ips_connected )" ]; then
