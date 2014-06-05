@@ -1,0 +1,47 @@
+#!/bin/bash
+CNT=/var/run/check_ppp
+
+FAILED=""
+if ! grep -q ppp0 /proc/net/dev; then
+  FAILED=ppp
+elif ! route -n | egrep "^0.0.0.0" > /dev/null; then
+  FAILED=default
+elif ! httping -t 10 -c 3 google.com > /dev/null; then
+  FAILED=ping
+elif ! grep -q tun0 /proc/net/dev; then
+  FAILED=openvpn
+fi
+
+if [ -f $CNT ]; then
+  count=$( cat $CNT )
+else
+  count=0
+fi
+
+if [ "$FAILED" ]; then
+  echo $(( count + 1 )) > $CNT
+  logger "Internet-check failed for reason: $FAILED - counter is $count"
+  if [ "$count" -gt 5 ]; then
+    logger "Failed for 5 minutes in $FAILED"
+    case $FAILED in
+    openvpn)
+      service openvpn restart
+      ;;
+    *)
+      netctl stop tawali
+      poff -a
+      systemctl stop openvpn@vpn-profeda-man
+      killall -9 openvpn
+      echo 0 > $CNT
+      while poff -a; do
+        echo Killed pppd
+      done
+      netctl start tawali
+      systemctl start openvpn@vpn-profeda-man
+      ;;
+    esac
+  fi
+else
+  echo 0 > $CNT
+fi
+
