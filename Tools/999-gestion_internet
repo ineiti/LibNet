@@ -29,6 +29,6 @@
 	ServerAlias *
 
 	RewriteEngine On
-	RewriteRule /.* http://local.profeda.org
+	RewriteRule /.* http://intern.profeda.org
 </VirtualHost>
 
