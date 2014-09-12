@@ -63,6 +63,7 @@ users_level(){
 }
 
 users_high_level(){
+  local u
   USERS_HIGH=""
   for u in $( users_connected ); do
     if [ $( users_level $u ) -gt 2 ]; then
@@ -74,6 +75,7 @@ users_high_level(){
 
 users_mac(){
   USERS_MAC=""
+  local p
   for p in $( iptables -L FCAPTIVE -nv | grep MAC | sed -e "s/ *\([0-9]*\).*/\1/" ); do
     if [ $p -gt 0 ]; then
       USERS_MAC="mac"
@@ -84,6 +86,7 @@ users_mac(){
 
 users_low_level(){
   USERS_LOW=""
+  local u
   for u in $( users_connected ); do
     if [ $( users_level $u ) -lt 3 ]; then
       USERS_LOW="$USERS_LOW $u"
@@ -138,6 +141,7 @@ user_disconnect_name(){
 }
 
 user_disconnect_ip(){
+  local ip
   for ip in $( egrep "^$1 " $USERS_CONNECTED | sed -e "s/ /:/" ); do
     local U=$( echo $ip | sed -e "s/:/ /" )
     log Disconnecting -$U-
@@ -146,6 +150,7 @@ user_disconnect_ip(){
 }
 
 users_disconnect_all(){
+  local ip
   for ip in $( sed -e "s/ /:/" $USERS_CONNECTED ); do
     local U=$( echo $ip | sed -e "s/:/ /" )
     log Disconnecting -$U-

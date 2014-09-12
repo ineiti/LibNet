@@ -98,6 +98,7 @@ captive_mac_del(){
 }
 
 captive_clear(){
+  local ip
   loga Clearing IPs and refreshing MACs
   $IPNAT -F CAPTIVE
   iptables -F FCAPTIVE
@@ -128,6 +129,7 @@ captive_clear(){
   for ip in $( cat $IP_LIST ); do
     captive_ip_accept $ip
   done
+  local mac
   for mac in $( cat $MAC_LIST ); do
     captive_mac_accept $mac
   done
@@ -150,14 +152,20 @@ captive_accept_all(){
 }
 
 captive_packets_count(){
-  echo $( iptables -L FCAPTIVE -nv | grep $1 | head -n 1 | 
-    sed -e "s/ *\([^ ]*\).*/\1/" )
+  TOT=0
+  local a
+  for a in $( iptables -L FCAPTIVE -nv | grep $1 | head -n 1 | 
+    sed -e "s/ *\([^ ]*\).*/\1/" ); do
+    TOT=$(( TOT + a ))
+  done
+  echo $TOT
 }
 
 # This can be called from time to time to check on idle people
 captive_cleanup(){
   users_check_connected
   local CS=$( isp_connection_status )
+  local ip
   if [ "$CS" = 0 ]; then
     if [ "$( ips_connected )" ]; then
       if [ "$CONNECTION_TYPE" != "permanent" ]; then
@@ -185,8 +193,9 @@ captive_cleanup(){
           loga No packets, kicking $ip
           user_disconnect_ip $ip
           remove_line "^$ip\$" $IPS_IDLE
+          loga Lines_idle is now $IPS_IDLE
         else
-          log $ip is idle, adding to list
+          loga $ip is idle, adding to list
           echo $ip >> $IPS_IDLE
         fi
       else
@@ -242,6 +251,7 @@ captive_setup(){
 
   captive_clear
 
+  local ip
   for ip in $( ips_connected ); do
     captive_ip_accept $ip
   done
@@ -256,6 +266,7 @@ captive_block(){
 }
 
 captive_rest_addr(){
+  local ip
   for ip in 10.1.0.0/24 10.0.0.0/24 10.1.10.0/21 10.2.10.0/21; do
     captive_ip_drop $1 $ip
   done

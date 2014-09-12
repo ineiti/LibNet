@@ -39,8 +39,8 @@ ppp_tx(){
 }
 
 remove_line(){
-  SEARCH=$1
-  FILE=$2
+  local SEARCH=$1
+  local FILE=$2
 
   egrep -v "$SEARCH" "$FILE" > "$FILE.tmp"
   mv "$FILE.tmp" "$FILE"
